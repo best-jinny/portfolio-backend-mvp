@@ -150,7 +150,33 @@ The design favors small modules and small aggregates over broad "manager" module
 - `portfolio-evidence`: What claim is being made and what evidence supports, contradicts, or contextualizes it?
 - `portfolio-recommendation`: What additional asset should be considered for a specific purpose?
 
-## 8. Dependency Rules
+## 8. Evidence Ownership And Claim Flow
+
+`portfolio-evidence` is the only module that owns `Claim`, `EvidenceItem`, `EvidenceLink`, and evidence classification rules.
+
+Other business modules must not create persisted claims directly and must not classify a statement as `FACT`, `ESTIMATE`, or `INTERPRETATION`. They may produce local explanation text, rationale anchors, or claim drafts as part of their own result, but those drafts are not evidence-domain objects.
+
+Claim creation flow:
+
+1. A business module produces a decision result and local rationale drafts.
+2. `portfolio-worker` passes those drafts, source snapshots, and target references to `portfolio-evidence`.
+3. `portfolio-evidence` validates, classifies, and persists claims.
+4. `portfolio-evidence` creates `EvidenceLink` records from claims to target result sections.
+5. Read APIs compose proposal sections with evidence links, but business aggregates do not own claim collections.
+
+Target references use stable identifiers, not direct object references:
+
+```text
+targetModule: portfolio-allocation
+targetType: ProposedAllocation
+targetId: allocation_123
+targetAnchor: rationale
+relationType: SUPPORTS
+```
+
+This keeps `portfolio-allocation`, `portfolio-simulation`, and `portfolio-recommendation` independent from `portfolio-evidence` while still allowing evidence drill-down.
+
+## 9. Dependency Rules
 
 Dependencies must be one-way and layer skipping is forbidden.
 
@@ -202,7 +228,32 @@ portfolio-worker
 
 The worker is a process manager. It may choose the next workflow step, pass outputs from one use case into another, and mark jobs failed or completed. It must not make domain decisions. For example, it may call `GenerateAllocationPlanUseCase`, but it must not choose asset weights itself.
 
-## 9. Technology Stack
+## 10. Proposal Read Composition
+
+`GetPortfolioProposal` returns a composed read model, not a single aggregate.
+
+The full frontend response is assembled by `portfolio-api` from read-oriented `application/port/in` calls:
+
+```text
+portfolio-api
+  -> portfolio-proposal: proposal header, status, section ids
+  -> portfolio-allocation: allocation plan and scenario assumptions
+  -> portfolio-simulation: capital growth projection
+  -> portfolio-recommendation: purpose-specific suggestions
+  -> portfolio-evidence: evidence summaries for linked target references
+```
+
+Composition rules:
+
+- `portfolio-api` may compose response DTOs, but must not make business decisions.
+- `portfolio-api` must not call repositories or adapters directly.
+- Business modules return their own read models through `application/port/in`.
+- Evidence is joined through `EvidenceLink` target references, not through fields embedded in business aggregates.
+- The API response can be broad and screen-oriented; aggregate boundaries stay small.
+
+If composition logic grows beyond simple DTO assembly, introduce a dedicated app-level query service inside `portfolio-api`, not a shared business module dependency.
+
+## 11. Technology Stack
 
 Recommended MVP stack:
 
@@ -226,7 +277,7 @@ WebFlux is used primarily for:
 
 JPA is preferred for the MVP because the user wants to practice DDD and aggregate modeling. jOOQ can be added later for read models if proposal/evidence/reporting queries become too complex.
 
-## 10. Core Use Cases
+## 12. Core Use Cases
 
 ### SearchAsset
 
@@ -260,7 +311,7 @@ Generate the investment decision core:
 - Recommended monthly allocation.
 - Recommended investment horizon.
 - Bear/Base/Bull scenario assumptions.
-- Allocation rationale claim references.
+- Allocation rationale drafts and local rationale anchors.
 
 ### GenerateCapitalGrowthProjection
 
@@ -279,7 +330,15 @@ Generate additional assets to consider:
 - Return enhancement candidates.
 - Gap filling candidates.
 - Caution candidates.
-- Rationale and counter-argument claim references.
+- Rationale and counter-argument drafts.
+
+### CreateEvidenceLinks
+
+Validate and persist evidence-domain objects:
+
+- Classify claim drafts into `FACT`, `ESTIMATE`, or `INTERPRETATION`.
+- Persist claims and evidence items.
+- Link claims to proposal result targets through `EvidenceLink`.
 
 ### GetPortfolioProposal
 
@@ -289,7 +348,7 @@ Return the proposal in conclusion-first shape for the frontend.
 
 Return evidence details for a claim or recommendation.
 
-## 11. Domain Model Outline
+## 13. Domain Model Outline
 
 ### portfolio-asset
 
@@ -315,7 +374,7 @@ Important invariants:
 
 - Initial allocation weights sum to 100%.
 - Monthly allocation weights sum to 100% when monthly contribution exists.
-- Important rationales reference claims or evidence.
+- Important rationales must expose local anchors so `portfolio-evidence` can link claims to them.
 - Recommended horizon must be positive.
 - Scenario return ranges must be ordered as min <= max.
 
@@ -343,6 +402,7 @@ Evidence rules:
 - A `FACT` claim requires at least one source.
 - An `ESTIMATE` claim requires method and limitations.
 - An `INTERPRETATION` claim requires supporting evidence and a stated limitation or counterpoint.
+- Evidence links target other module results through stable target references. Other business modules do not store `ClaimId` as part of their aggregate invariants.
 
 ### portfolio-recommendation
 
@@ -355,9 +415,9 @@ Suggestion types:
 - `GAP_FILLING`
 - `CAUTION`
 
-Each suggestion must include rationale and counter-argument claim references.
+Each suggestion must include local rationale and counter-argument anchors so `portfolio-evidence` can attach claims without making `portfolio-recommendation` depend on evidence-domain objects.
 
-## 12. Data To Store
+## 14. Data To Store
 
 MVP tables or persisted aggregates:
 
@@ -382,7 +442,7 @@ MVP tables or persisted aggregates:
 
 Evidence and source snapshot data are required for trust and reproducibility. The product must be able to explain why a proposal was generated with the data available at that time.
 
-## 13. Proposal Generation Pipeline
+## 15. Proposal Generation Pipeline
 
 Initial proposal generation pipeline:
 
@@ -396,7 +456,7 @@ Initial proposal generation pipeline:
 8. Simulate capital growth.
 9. Build exposure map.
 10. Generate purpose-specific suggestions.
-11. Attach claims and evidence links.
+11. Convert rationale drafts into claims and evidence links through `portfolio-evidence`.
 12. Save proposal and mark job completed.
 
 The pipeline is coordinated by `portfolio-worker`, but each decision belongs to the module that owns the relevant business capability:
@@ -410,7 +470,7 @@ The pipeline is coordinated by `portfolio-worker`, but each decision belongs to 
 
 The first implementation may use deterministic mock or fixture-based proposal generation while preserving the final API and domain shapes.
 
-## 14. Out Of Scope For MVP
+## 16. Out Of Scope For MVP
 
 - Brokerage connection.
 - Automated trading.
@@ -423,7 +483,7 @@ The first implementation may use deterministic mock or fixture-based proposal ge
 
 The API and domain model should leave room for these features later.
 
-## 15. First Implementation Slice
+## 17. First Implementation Slice
 
 The first implementation should build an AI-free backend MVP:
 
