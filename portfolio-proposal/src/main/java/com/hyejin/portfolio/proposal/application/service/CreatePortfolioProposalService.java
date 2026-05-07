@@ -1,0 +1,76 @@
+package com.hyejin.portfolio.proposal.application.service;
+
+import com.hyejin.portfolio.asset.application.port.in.GetAssetFeatureUseCase;
+import com.hyejin.portfolio.asset.domain.Asset;
+import com.hyejin.portfolio.proposal.adapter.out.InMemoryPortfolioProposalRepository;
+import com.hyejin.portfolio.proposal.application.port.in.CreatePortfolioProposalUseCase;
+import com.hyejin.portfolio.proposal.domain.HorizonRationale;
+import com.hyejin.portfolio.proposal.domain.PortfolioProposal;
+import com.hyejin.portfolio.proposal.domain.ProposalStatus;
+
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
+
+public class CreatePortfolioProposalService implements CreatePortfolioProposalUseCase {
+    private final GetAssetFeatureUseCase getAssetFeatureUseCase;
+    private final InMemoryPortfolioProposalRepository repository;
+    private final AnalyzePortfolioExposuresService analyzer;
+    private final DetectInsightSignalsService detector;
+    private final GenerateProposalActionsService actionGenerator;
+
+    public CreatePortfolioProposalService(
+        GetAssetFeatureUseCase getAssetFeatureUseCase,
+        InMemoryPortfolioProposalRepository repository,
+        AnalyzePortfolioExposuresService analyzer,
+        DetectInsightSignalsService detector,
+        GenerateProposalActionsService actionGenerator
+    ) {
+        this.getAssetFeatureUseCase = getAssetFeatureUseCase;
+        this.repository = repository;
+        this.analyzer = analyzer;
+        this.detector = detector;
+        this.actionGenerator = actionGenerator;
+    }
+
+    @Override
+    public PortfolioProposal create(Command command) {
+        var assets = command.assetIds().stream().map(getAssetFeatureUseCase::getFeature).toList();
+        var exposure = analyzer.analyze(assets);
+        var signals = detector.detect(exposure);
+        var actions = actionGenerator.generate(signals);
+        var horizon = buildHorizon(assets);
+        var summary = signals.isEmpty()
+            ? "The selected assets do not trigger a major mock overlap signal."
+            : signals.getFirst().userExplanation();
+
+        return repository.save(new PortfolioProposal(
+            UUID.randomUUID(),
+            command.intentId(),
+            ProposalStatus.COMPLETED,
+            summary,
+            horizon,
+            signals,
+            actions,
+            Instant.now()
+        ));
+    }
+
+    private HorizonRationale buildHorizon(List<Asset> assets) {
+        var recommended = (int) Math.round(
+            assets.stream().mapToInt(Asset::momentumWindowMonths).average().orElse(12)
+        );
+        var reviewAfter = assets.stream().map(Asset::momentumWindowMonths).min(Comparator.naturalOrder()).orElse(6);
+        var drivers = assets.stream().map(asset -> asset.symbol() + ": " + asset.catalyst()).toList();
+        var triggers = assets.stream().flatMap(asset -> asset.reviewTriggers().stream()).limit(4).toList();
+
+        return new HorizonRationale(
+            recommended,
+            reviewAfter,
+            "The horizon comes from the selected assets' mock momentum windows and the earliest point where the main thesis should be checked again. Risk profile changes position limits, not this horizon.",
+            drivers,
+            triggers
+        );
+    }
+}
