@@ -62,7 +62,7 @@ Capital growth simulation must show actual money outcomes, not just return perce
 4. User selects a five-level risk profile.
 5. User creates a portfolio intent.
 6. User requests a portfolio proposal.
-7. The backend creates an analysis job.
+7. The backend creates a proposal job.
 8. The proposal is generated.
 9. User sees conclusion first.
 10. User drills into evidence, sources, scenario assumptions, and objections.
@@ -104,7 +104,9 @@ Top-level modules:
 ```text
 portfolio-api
 portfolio-worker
-portfolio-analysis
+portfolio-proposal
+portfolio-allocation
+portfolio-simulation
 portfolio-asset
 portfolio-evidence
 portfolio-recommendation
@@ -117,7 +119,9 @@ Module responsibilities:
 
 - `portfolio-api`: BFF/API gateway for frontend communication. Owns controllers, request/response DTOs, authentication entry points, and screen-oriented response composition.
 - `portfolio-worker`: Executable worker application for async proposal jobs. It orchestrates business module use cases through `application/port/in` interfaces, but does not own business rules.
-- `portfolio-analysis`: Owns portfolio intent, proposal generation, allocation, scenario projection, recommended horizon, and capital growth simulation.
+- `portfolio-proposal`: Owns portfolio intent, proposal job lifecycle, proposal summary, and final proposal assembly state. It does not decide allocations, scenarios, simulations, evidence classification, or recommendations.
+- `portfolio-allocation`: Owns recommended initial allocation, monthly contribution split, risk-profile interpretation, recommended investment horizon, and scenario assumption generation.
+- `portfolio-simulation`: Owns capital growth projection and cash-flow simulation. It converts allocation, contribution, horizon, and scenario assumptions into graph-ready money paths.
 - `portfolio-asset`: Owns asset master data, asset search, symbols, markets, asset type, and basic price snapshots.
 - `portfolio-evidence`: Owns claims, evidence items, evidence links, source snapshots, and evidence policy.
 - `portfolio-recommendation`: Owns purpose-specific suggestions: stability, return enhancement, gap filling, and caution.
@@ -136,6 +140,15 @@ domain
 ```
 
 The MVP avoids placing every persistence or external adapter inside `portfolio-infrastructure`. Each business module owns its own `adapter/out` implementation where possible. This keeps future MSA extraction easier.
+
+The design favors small modules and small aggregates over broad "manager" modules. Each module should answer one business question:
+
+- `portfolio-proposal`: What proposal is being requested, what state is it in, and what result sections belong to it?
+- `portfolio-allocation`: Given assets, risk profile, and evidence-backed assumptions, what weights, horizon, and scenario assumptions are appropriate?
+- `portfolio-simulation`: Given cash flows and scenario assumptions, what monetary paths result?
+- `portfolio-asset`: What asset is this and what canonical market data identifies it?
+- `portfolio-evidence`: What claim is being made and what evidence supports, contradicts, or contextualizes it?
+- `portfolio-recommendation`: What additional asset should be considered for a specific purpose?
 
 ## 8. Dependency Rules
 
@@ -165,11 +178,29 @@ Examples of forbidden calls:
 - `application/service` calling an adapter implementation directly.
 - `adapter/out` calling `application/service`.
 - `domain` calling ports or Spring components.
-- `portfolio-analysis` directly depending on `portfolio-evidence`, `portfolio-asset`, or `portfolio-recommendation`.
+- `portfolio-allocation` directly depending on `portfolio-asset`, `portfolio-evidence`, `portfolio-simulation`, or `portfolio-recommendation`.
+- `portfolio-proposal` directly depending on `portfolio-allocation`, `portfolio-simulation`, `portfolio-evidence`, or `portfolio-recommendation`.
 
 Architecture rules should be enforced later with ArchUnit tests.
 
 `portfolio-api` and `portfolio-worker` are executable app modules. They may coordinate multiple business modules, but they must not contain domain decisions such as how to assign weights, how to classify evidence, or how to decide whether a suggestion is stability-oriented or return-oriented. Those rules stay inside the relevant business modules.
+
+Business module communication is in-process for the MVP, not network communication. Executable app modules coordinate through `application/port/in` interfaces:
+
+```text
+portfolio-api
+  -> business module application/port/in
+
+portfolio-worker
+  -> portfolio-proposal application/port/in
+  -> portfolio-asset application/port/in
+  -> portfolio-allocation application/port/in
+  -> portfolio-simulation application/port/in
+  -> portfolio-evidence application/port/in
+  -> portfolio-recommendation application/port/in
+```
+
+The worker is a process manager. It may choose the next workflow step, pass outputs from one use case into another, and mark jobs failed or completed. It must not make domain decisions. For example, it may call `GenerateAllocationPlanUseCase`, but it must not choose asset weights itself.
 
 ## 9. Technology Stack
 
@@ -215,17 +246,40 @@ Create the user's investment input:
 
 ### GeneratePortfolioProposal
 
-Generate a proposal for the intent:
+Start and coordinate proposal generation for the intent:
+
+- Proposal job lifecycle.
+- Final proposal section assembly.
+- References to allocation, simulation, evidence, and recommendation results.
+
+### GenerateAllocationPlan
+
+Generate the investment decision core:
 
 - Recommended initial allocation.
 - Recommended monthly allocation.
-- Recommended horizon.
-- Scenario projections.
-- Capital growth simulation.
-- Thesis validation.
-- Exposure map.
-- Purpose-specific suggestions.
-- Evidence-linked reasoning.
+- Recommended investment horizon.
+- Bear/Base/Bull scenario assumptions.
+- Allocation rationale claim references.
+
+### GenerateCapitalGrowthProjection
+
+Generate graph-ready monetary paths:
+
+- Cumulative principal.
+- Expected evaluated value range.
+- Expected profit range.
+- Six-month interval points over the recommended horizon.
+
+### GeneratePurposeSpecificSuggestions
+
+Generate additional assets to consider:
+
+- Stability candidates.
+- Return enhancement candidates.
+- Gap filling candidates.
+- Caution candidates.
+- Rationale and counter-argument claim references.
 
 ### GetPortfolioProposal
 
@@ -242,22 +296,40 @@ Return evidence details for a claim or recommendation.
 - `Asset`
 - `AssetPriceSnapshot`
 
-### portfolio-analysis
+### portfolio-proposal
 
 - `PortfolioIntent`
 - `SelectedAsset`
+- `ProposalJob`
 - `PortfolioProposal`
+
+`PortfolioProposal` is not a large aggregate that owns every result object. It is a proposal header and lifecycle aggregate that references section results by id. API responses may compose a full proposal document, but the aggregate boundary remains smaller than the response shape.
+
+### portfolio-allocation
+
+- `AllocationPlan`
 - `ProposedAllocation`
 - `ScenarioProjection`
-- `CapitalGrowthPoint`
 
 Important invariants:
 
 - Initial allocation weights sum to 100%.
 - Monthly allocation weights sum to 100% when monthly contribution exists.
+- Important rationales reference claims or evidence.
+- Recommended horizon must be positive.
+- Scenario return ranges must be ordered as min <= max.
+
+### portfolio-simulation
+
+- `CapitalGrowthProjection`
+- `CapitalGrowthPoint`
+
+Important invariants:
+
 - Principal, expected value, and expected profit ranges cannot create invalid negative principal.
 - Capital growth months start at 0 and progress to the recommended horizon.
-- Important rationales reference claims or evidence.
+- Projection points must be ordered by month.
+- The simulation module does not decide expected returns, scenario assumptions, or asset weights. It only computes monetary paths from inputs.
 
 ### portfolio-evidence
 
@@ -295,8 +367,10 @@ MVP tables or persisted aggregates:
 - Intent selected assets.
 - Proposal jobs.
 - Portfolio proposals.
+- Allocation plans.
 - Proposed allocations.
 - Scenario projections.
+- Capital growth projections.
 - Capital growth points.
 - Asset insights.
 - Portfolio exposures.
@@ -308,14 +382,14 @@ MVP tables or persisted aggregates:
 
 Evidence and source snapshot data are required for trust and reproducibility. The product must be able to explain why a proposal was generated with the data available at that time.
 
-## 13. Analysis Pipeline
+## 13. Proposal Generation Pipeline
 
-Initial generation pipeline:
+Initial proposal generation pipeline:
 
 1. Validate intent.
 2. Resolve asset metadata.
 3. Collect market and source data.
-4. Generate asset-level insights.
+4. Generate asset-level insights and evidence-backed assumptions.
 5. Generate scenario assumptions.
 6. Propose allocation and monthly contribution split.
 7. Propose investment horizon.
@@ -325,7 +399,16 @@ Initial generation pipeline:
 11. Attach claims and evidence links.
 12. Save proposal and mark job completed.
 
-The first implementation may use deterministic mock or fixture-based analysis while preserving the final API and domain shapes.
+The pipeline is coordinated by `portfolio-worker`, but each decision belongs to the module that owns the relevant business capability:
+
+- Asset identity and metadata decisions belong to `portfolio-asset`.
+- Evidence classification and evidence links belong to `portfolio-evidence`.
+- Weight, horizon, and scenario assumption decisions belong to `portfolio-allocation`.
+- Money-path calculation belongs to `portfolio-simulation`.
+- Purpose-specific suggestion classification belongs to `portfolio-recommendation`.
+- Proposal lifecycle and final section references belong to `portfolio-proposal`.
+
+The first implementation may use deterministic mock or fixture-based proposal generation while preserving the final API and domain shapes.
 
 ## 14. Out Of Scope For MVP
 
