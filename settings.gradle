@@ -1,0 +1,29 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'portfolio-insight-server'
+
+include(
+    'portfolio-common',
+    'portfolio-error',
+    'portfolio-proposal',
+    'portfolio-allocation',
+    'portfolio-simulation',
+    'portfolio-asset',
+    'portfolio-evidence',
+    'portfolio-recommendation',
+    'portfolio-infrastructure',
+    'portfolio-api',
+    'portfolio-worker'
+)
