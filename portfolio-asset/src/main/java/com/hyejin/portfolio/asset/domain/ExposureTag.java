@@ -1,0 +1,19 @@
+package com.hyejin.portfolio.asset.domain;
+
+public enum ExposureTag {
+    KOREA_EQUITY,
+    US_EQUITY,
+    USD_EXPOSURE,
+    KRW_LISTING,
+    SEMICONDUCTOR_CYCLE,
+    AI_CAPEX,
+    AUTO_CYCLE,
+    EXPORT_FX_SENSITIVITY,
+    DEFENSIVE_CONSUMER,
+    MEGA_CAP_TECH,
+    BROAD_US_MARKET,
+    CRYPTO_LIQUIDITY,
+    RISK_APPETITE,
+    HIGH_VOLATILITY,
+    LEVERAGED_PRODUCT
+}
