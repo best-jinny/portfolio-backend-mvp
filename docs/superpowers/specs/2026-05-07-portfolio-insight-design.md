@@ -232,10 +232,18 @@ The worker is a process manager. It may choose the next workflow step, pass outp
 
 `GetPortfolioProposal` returns a composed read model, not a single aggregate.
 
-The full frontend response is assembled by `portfolio-api` from read-oriented `application/port/in` calls:
+The full frontend response is assembled by `ProposalQueryService` in the `portfolio-api` application layer. Controllers call only this query service for proposal detail reads.
 
 ```text
-portfolio-api
+portfolio-api adapter/in/web controller
+  -> portfolio-api application/service/ProposalQueryService
+  -> business module application/port/in
+```
+
+`ProposalQueryService` composes read-oriented `application/port/in` calls:
+
+```text
+ProposalQueryService
   -> portfolio-proposal: proposal header, status, section ids
   -> portfolio-allocation: allocation plan and scenario assumptions
   -> portfolio-simulation: capital growth projection
@@ -245,13 +253,14 @@ portfolio-api
 
 Composition rules:
 
-- `portfolio-api` may compose response DTOs, but must not make business decisions.
+- Controllers must not compose proposal details directly.
+- `ProposalQueryService` may compose response DTOs, but must not make business decisions.
 - `portfolio-api` must not call repositories or adapters directly.
 - Business modules return their own read models through `application/port/in`.
 - Evidence is joined through `EvidenceLink` target references, not through fields embedded in business aggregates.
 - The API response can be broad and screen-oriented; aggregate boundaries stay small.
 
-If composition logic grows beyond simple DTO assembly, introduce a dedicated app-level query service inside `portfolio-api`, not a shared business module dependency.
+If the proposal read path later becomes expensive or highly specialized, replace `ProposalQueryService` internals with a CQRS read model or materialized view. The controller contract stays stable because the replacement point is the query service, not the controller.
 
 ## 11. Technology Stack
 
@@ -355,12 +364,38 @@ Return evidence details for a claim or recommendation.
 - `Asset`
 - `AssetPriceSnapshot`
 
+`AssetPriceSnapshot` is normalized market data owned by `portfolio-asset`.
+
+Use it for:
+
+- Historical close price.
+- Return and volatility calculation.
+- Currency-aware price lookup.
+- Quantitative simulation inputs.
+
+It stores calculated or normalized market facts, not full source provenance.
+
 ### portfolio-proposal
 
 - `PortfolioIntent`
 - `SelectedAsset`
 - `ProposalJob`
 - `PortfolioProposal`
+
+`SelectedAsset` stores the user's selected asset reference as an intent-time snapshot. It must not copy the full `Asset` aggregate.
+
+Fields:
+
+- `assetId`
+- `symbol`
+- `displayName`
+- `assetType`
+- `market`
+- `currency`
+- `userThesis`, nullable
+- `displayOrder`
+
+The snapshot fields support reproducibility and UI display if asset master data changes later. Canonical asset identity and asset metadata still belong to `portfolio-asset`.
 
 `PortfolioProposal` is not a large aggregate that owns every result object. It is a proposal header and lifecycle aggregate that references section results by id. API responses may compose a full proposal document, but the aggregate boundary remains smaller than the response shape.
 
@@ -396,6 +431,17 @@ Important invariants:
 - `EvidenceItem`
 - `EvidenceLink`
 - `DataSourceSnapshot`
+
+`DataSourceSnapshot` is source provenance owned by `portfolio-evidence`.
+
+Use it for:
+
+- Raw or normalized source payload reference.
+- Source URL, publisher, retrieval time, and content hash.
+- Company IR, filings, macro statistics, ETF documents, market data vendor responses, or LLM research inputs used to support a claim.
+- Reproducing why a claim was made at proposal generation time.
+
+When market data supports a claim, the normalized price belongs in `AssetPriceSnapshot`, while the vendor response or source metadata used as evidence belongs in `DataSourceSnapshot`.
 
 Evidence rules:
 
@@ -462,11 +508,19 @@ Initial proposal generation pipeline:
 The pipeline is coordinated by `portfolio-worker`, but each decision belongs to the module that owns the relevant business capability:
 
 - Asset identity and metadata decisions belong to `portfolio-asset`.
+- Normalized market price snapshots belong to `portfolio-asset`.
+- Source provenance snapshots belong to `portfolio-evidence`.
 - Evidence classification and evidence links belong to `portfolio-evidence`.
 - Weight, horizon, and scenario assumption decisions belong to `portfolio-allocation`.
 - Money-path calculation belongs to `portfolio-simulation`.
 - Purpose-specific suggestion classification belongs to `portfolio-recommendation`.
 - Proposal lifecycle and final section references belong to `portfolio-proposal`.
+
+Step 3 writes data by responsibility:
+
+- Price/time-series data used for quantitative calculations is persisted as `AssetPriceSnapshot`.
+- Source payloads or source metadata used to support claims are persisted as `DataSourceSnapshot`.
+- The same external market data response may produce both: normalized prices for calculation and a source snapshot for evidence traceability.
 
 The first implementation may use deterministic mock or fixture-based proposal generation while preserving the final API and domain shapes.
 
