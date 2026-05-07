@@ -2,8 +2,8 @@ package com.hyejin.portfolio.proposal.application.service;
 
 import com.hyejin.portfolio.asset.application.port.in.GetAssetFeatureUseCase;
 import com.hyejin.portfolio.asset.domain.Asset;
-import com.hyejin.portfolio.proposal.adapter.out.InMemoryPortfolioProposalRepository;
 import com.hyejin.portfolio.proposal.application.port.in.CreatePortfolioProposalUseCase;
+import com.hyejin.portfolio.proposal.application.port.out.SavePortfolioProposalPort;
 import com.hyejin.portfolio.proposal.domain.HorizonRationale;
 import com.hyejin.portfolio.proposal.domain.PortfolioProposal;
 import com.hyejin.portfolio.proposal.domain.ProposalStatus;
@@ -15,20 +15,20 @@ import java.util.UUID;
 
 public class CreatePortfolioProposalService implements CreatePortfolioProposalUseCase {
     private final GetAssetFeatureUseCase getAssetFeatureUseCase;
-    private final InMemoryPortfolioProposalRepository repository;
+    private final SavePortfolioProposalPort savePortfolioProposalPort;
     private final AnalyzePortfolioExposuresService analyzer;
     private final DetectInsightSignalsService detector;
     private final GenerateProposalActionsService actionGenerator;
 
     public CreatePortfolioProposalService(
         GetAssetFeatureUseCase getAssetFeatureUseCase,
-        InMemoryPortfolioProposalRepository repository,
+        SavePortfolioProposalPort savePortfolioProposalPort,
         AnalyzePortfolioExposuresService analyzer,
         DetectInsightSignalsService detector,
         GenerateProposalActionsService actionGenerator
     ) {
         this.getAssetFeatureUseCase = getAssetFeatureUseCase;
-        this.repository = repository;
+        this.savePortfolioProposalPort = savePortfolioProposalPort;
         this.analyzer = analyzer;
         this.detector = detector;
         this.actionGenerator = actionGenerator;
@@ -45,7 +45,7 @@ public class CreatePortfolioProposalService implements CreatePortfolioProposalUs
             ? "The selected assets do not trigger a major mock overlap signal."
             : signals.getFirst().userExplanation();
 
-        return repository.save(new PortfolioProposal(
+        return savePortfolioProposalPort.save(new PortfolioProposal(
             UUID.randomUUID(),
             command.intentId(),
             ProposalStatus.COMPLETED,
