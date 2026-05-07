@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the AI-free backend MVP skeleton for the portfolio insight service.
+**Goal:** Build the AI-free Java backend MVP skeleton for the portfolio insight service.
 
-**Architecture:** Use a Gradle Kotlin multi-module modular monolith with business-feature modules. `portfolio-api` and `portfolio-worker` are executable app modules; business modules expose use cases through `application/port/in`; business modules do not depend on each other.
+**Architecture:** Use a Gradle Java multi-module modular monolith with business-feature modules. `portfolio-api` and `portfolio-worker` are executable app modules; business modules expose use cases through `application/port/in`; business modules do not depend on each other.
 
-**Tech Stack:** Kotlin, Spring Boot WebFlux, Spring Data JPA, PostgreSQL-ready persistence boundaries, Flyway-ready structure, JUnit 5, ArchUnit.
+**Tech Stack:** Java 21, Spring Boot WebFlux, Spring Data JPA-ready boundaries, PostgreSQL-ready persistence boundaries, Flyway-ready structure, JUnit 5, ArchUnit.
 
 ---
 
@@ -31,8 +31,8 @@ Real external market data, real LLM research, brokerage integration, authenticat
 
 ```text
 portfolio-insight-server
-├── settings.gradle.kts
-├── build.gradle.kts
+├── settings.gradle
+├── build.gradle
 ├── portfolio-api
 ├── portfolio-worker
 ├── portfolio-proposal
@@ -49,7 +49,7 @@ portfolio-insight-server
 Each business module uses:
 
 ```text
-src/main/kotlin/com/hyejin/portfolio/<module>/
+src/main/java/com/hyejin/portfolio/<module>/
 ├── adapter/out
 ├── application/port/in
 ├── application/port/out
@@ -59,26 +59,26 @@ src/main/kotlin/com/hyejin/portfolio/<module>/
 
 ---
 
-### Task 1: Gradle Multi-Module Skeleton
+### Task 1: Gradle Java Multi-Module Skeleton
 
 **Files:**
-- Create: `settings.gradle.kts`
-- Create: `build.gradle.kts`
-- Create: `portfolio-common/build.gradle.kts`
-- Create: `portfolio-error/build.gradle.kts`
-- Create: `portfolio-proposal/build.gradle.kts`
-- Create: `portfolio-allocation/build.gradle.kts`
-- Create: `portfolio-simulation/build.gradle.kts`
-- Create: `portfolio-asset/build.gradle.kts`
-- Create: `portfolio-evidence/build.gradle.kts`
-- Create: `portfolio-recommendation/build.gradle.kts`
-- Create: `portfolio-infrastructure/build.gradle.kts`
-- Create: `portfolio-api/build.gradle.kts`
-- Create: `portfolio-worker/build.gradle.kts`
+- Create: `settings.gradle`
+- Create: `build.gradle`
+- Create: `portfolio-common/build.gradle`
+- Create: `portfolio-error/build.gradle`
+- Create: `portfolio-proposal/build.gradle`
+- Create: `portfolio-allocation/build.gradle`
+- Create: `portfolio-simulation/build.gradle`
+- Create: `portfolio-asset/build.gradle`
+- Create: `portfolio-evidence/build.gradle`
+- Create: `portfolio-recommendation/build.gradle`
+- Create: `portfolio-infrastructure/build.gradle`
+- Create: `portfolio-api/build.gradle`
+- Create: `portfolio-worker/build.gradle`
 
-- [ ] **Step 1: Create `settings.gradle.kts`**
+- [ ] **Step 1: Create `settings.gradle`**
 
-```kotlin
+```groovy
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -93,36 +93,34 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "portfolio-insight-server"
+rootProject.name = 'portfolio-insight-server'
 
 include(
-    "portfolio-common",
-    "portfolio-error",
-    "portfolio-proposal",
-    "portfolio-allocation",
-    "portfolio-simulation",
-    "portfolio-asset",
-    "portfolio-evidence",
-    "portfolio-recommendation",
-    "portfolio-infrastructure",
-    "portfolio-api",
-    "portfolio-worker",
+    'portfolio-common',
+    'portfolio-error',
+    'portfolio-proposal',
+    'portfolio-allocation',
+    'portfolio-simulation',
+    'portfolio-asset',
+    'portfolio-evidence',
+    'portfolio-recommendation',
+    'portfolio-infrastructure',
+    'portfolio-api',
+    'portfolio-worker'
 )
 ```
 
-- [ ] **Step 2: Create root `build.gradle.kts`**
+- [ ] **Step 2: Create root `build.gradle`**
 
-```kotlin
+```groovy
 plugins {
-    kotlin("jvm") version "1.9.25" apply false
-    kotlin("plugin.spring") version "1.9.25" apply false
-    id("org.springframework.boot") version "3.3.5" apply false
-    id("io.spring.dependency-management") version "1.1.6" apply false
+    id 'org.springframework.boot' version '3.3.5' apply false
+    id 'io.spring.dependency-management' version '1.1.6' apply false
 }
 
 subprojects {
-    group = "com.hyejin.portfolio"
-    version = "0.0.1-SNAPSHOT"
+    group = 'com.hyejin.portfolio'
+    version = '0.0.1-SNAPSHOT'
 
     repositories {
         mavenCentral()
@@ -130,95 +128,105 @@ subprojects {
 }
 ```
 
-- [ ] **Step 3: Create library module Gradle files**
+- [ ] **Step 3: Create library module build files**
 
-Use this exact file for `portfolio-common/build.gradle.kts`, `portfolio-error/build.gradle.kts`, `portfolio-proposal/build.gradle.kts`, `portfolio-allocation/build.gradle.kts`, `portfolio-simulation/build.gradle.kts`, `portfolio-asset/build.gradle.kts`, `portfolio-evidence/build.gradle.kts`, and `portfolio-recommendation/build.gradle.kts`.
+Use this exact file for `portfolio-common/build.gradle`, `portfolio-error/build.gradle`, `portfolio-proposal/build.gradle`, `portfolio-allocation/build.gradle`, `portfolio-simulation/build.gradle`, `portfolio-asset/build.gradle`, `portfolio-evidence/build.gradle`, and `portfolio-recommendation/build.gradle`.
 
-```kotlin
+```groovy
 plugins {
-    kotlin("jvm")
-    id("io.spring.dependency-management")
+    id 'java-library'
+    id 'io.spring.dependency-management'
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
 }
 
-tasks.withType<Test> {
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.3.5'
+    }
+}
+
+tasks.named('test') {
     useJUnitPlatform()
 }
 ```
 
-- [ ] **Step 4: Create `portfolio-infrastructure/build.gradle.kts`**
+- [ ] **Step 4: Create `portfolio-infrastructure/build.gradle`**
 
-```kotlin
+```groovy
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.spring")
-    id("io.spring.dependency-management")
+    id 'java-library'
+    id 'io.spring.dependency-management'
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 dependencies {
-    implementation("org.springframework:spring-webflux")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
+    api 'org.springframework:spring-webflux'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
 }
 
-tasks.withType<Test> {
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.3.5'
+    }
+}
+
+tasks.named('test') {
     useJUnitPlatform()
 }
 ```
 
-- [ ] **Step 5: Create executable module Gradle files**
+- [ ] **Step 5: Create executable module build files**
 
-Use this exact file for `portfolio-api/build.gradle.kts` and `portfolio-worker/build.gradle.kts`.
+Use this exact file for `portfolio-api/build.gradle` and `portfolio-worker/build.gradle`.
 
-```kotlin
+```groovy
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.spring")
-    id("org.springframework.boot")
-    id("io.spring.dependency-management")
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 dependencies {
-    implementation(project(":portfolio-common"))
-    implementation(project(":portfolio-error"))
-    implementation(project(":portfolio-proposal"))
-    implementation(project(":portfolio-allocation"))
-    implementation(project(":portfolio-simulation"))
-    implementation(project(":portfolio-asset"))
-    implementation(project(":portfolio-evidence"))
-    implementation(project(":portfolio-recommendation"))
-    implementation(project(":portfolio-infrastructure"))
+    implementation project(':portfolio-common')
+    implementation project(':portfolio-error')
+    implementation project(':portfolio-proposal')
+    implementation project(':portfolio-allocation')
+    implementation project(':portfolio-simulation')
+    implementation project(':portfolio-asset')
+    implementation project(':portfolio-evidence')
+    implementation project(':portfolio-recommendation')
+    implementation project(':portfolio-infrastructure')
 
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("io.projectreactor:reactor-test")
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
 }
 
-tasks.withType<Test> {
+tasks.named('test') {
     useJUnitPlatform()
 }
 ```
@@ -240,8 +248,8 @@ gradle projects
 - [ ] **Step 7: Commit**
 
 ```bash
-git add settings.gradle.kts build.gradle.kts portfolio-*/build.gradle.kts
-git commit -m "chore: create multi-module project skeleton"
+git add settings.gradle build.gradle portfolio-*/build.gradle
+git commit -m "chore: create java multi-module project skeleton"
 ```
 
 ---
@@ -249,88 +257,110 @@ git commit -m "chore: create multi-module project skeleton"
 ### Task 2: Common Value Types And Errors
 
 **Files:**
-- Create: `portfolio-common/src/main/kotlin/com/hyejin/portfolio/common/Money.kt`
-- Create: `portfolio-common/src/main/kotlin/com/hyejin/portfolio/common/Percentage.kt`
-- Create: `portfolio-error/src/main/kotlin/com/hyejin/portfolio/error/ErrorCode.kt`
-- Create: `portfolio-error/src/main/kotlin/com/hyejin/portfolio/error/PortfolioException.kt`
-- Test: `portfolio-common/src/test/kotlin/com/hyejin/portfolio/common/PercentageTest.kt`
+- Create: `portfolio-common/src/main/java/com/hyejin/portfolio/common/Money.java`
+- Create: `portfolio-common/src/main/java/com/hyejin/portfolio/common/Percentage.java`
+- Create: `portfolio-error/src/main/java/com/hyejin/portfolio/error/ErrorCode.java`
+- Create: `portfolio-error/src/main/java/com/hyejin/portfolio/error/PortfolioException.java`
+- Test: `portfolio-common/src/test/java/com/hyejin/portfolio/common/PercentageTest.java`
 
-- [ ] **Step 1: Write failing test for percentage bounds**
+- [ ] **Step 1: Write failing percentage bounds test**
 
-```kotlin
-package com.hyejin.portfolio.common
+```java
+package com.hyejin.portfolio.common;
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PercentageTest {
     @Test
-    fun `percentage must be between zero and one`() {
-        assertEquals(0.25.toBigDecimal(), Percentage.of(0.25.toBigDecimal()).value)
-        assertFailsWith<IllegalArgumentException> { Percentage.of((-0.01).toBigDecimal()) }
-        assertFailsWith<IllegalArgumentException> { Percentage.of(1.01.toBigDecimal()) }
+    void percentageMustBeBetweenZeroAndOne() {
+        assertThat(Percentage.of(new BigDecimal("0.25")).value()).isEqualByComparingTo("0.25");
+
+        assertThatThrownBy(() -> Percentage.of(new BigDecimal("-0.01")))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Percentage.of(new BigDecimal("1.01")))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }
 ```
 
 - [ ] **Step 2: Implement `Percentage`**
 
-```kotlin
-package com.hyejin.portfolio.common
+```java
+package com.hyejin.portfolio.common;
 
-import java.math.BigDecimal
+import java.math.BigDecimal;
+import java.util.Objects;
 
-@JvmInline
-value class Percentage private constructor(val value: BigDecimal) {
-    companion object {
-        fun of(value: BigDecimal): Percentage {
-            require(value >= BigDecimal.ZERO) { "percentage must be greater than or equal to 0" }
-            require(value <= BigDecimal.ONE) { "percentage must be less than or equal to 1" }
-            return Percentage(value)
+public record Percentage(BigDecimal value) {
+    public Percentage {
+        Objects.requireNonNull(value, "value must not be null");
+        if (value.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("percentage must be greater than or equal to 0");
         }
+        if (value.compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalArgumentException("percentage must be less than or equal to 1");
+        }
+    }
+
+    public static Percentage of(BigDecimal value) {
+        return new Percentage(value);
     }
 }
 ```
 
 - [ ] **Step 3: Implement `Money`**
 
-```kotlin
-package com.hyejin.portfolio.common
+```java
+package com.hyejin.portfolio.common;
 
-import java.math.BigDecimal
-import java.util.Currency
+import java.math.BigDecimal;
+import java.util.Currency;
+import java.util.Objects;
 
-data class Money(
-    val amount: BigDecimal,
-    val currency: Currency,
-) {
-    init {
-        require(amount >= BigDecimal.ZERO) { "money amount must not be negative" }
+public record Money(BigDecimal amount, Currency currency) {
+    public Money {
+        Objects.requireNonNull(amount, "amount must not be null");
+        Objects.requireNonNull(currency, "currency must not be null");
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("money amount must not be negative");
+        }
     }
 }
 ```
 
 - [ ] **Step 4: Implement shared error types**
 
-```kotlin
-package com.hyejin.portfolio.error
+```java
+package com.hyejin.portfolio.error;
 
-enum class ErrorCode {
+public enum ErrorCode {
     INVALID_REQUEST,
     NOT_FOUND,
     PROPOSAL_NOT_READY,
-    INTERNAL_ERROR,
+    INTERNAL_ERROR
 }
 ```
 
-```kotlin
-package com.hyejin.portfolio.error
+```java
+package com.hyejin.portfolio.error;
 
-class PortfolioException(
-    val code: ErrorCode,
-    override val message: String,
-) : RuntimeException(message)
+public class PortfolioException extends RuntimeException {
+    private final ErrorCode code;
+
+    public PortfolioException(ErrorCode code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    public ErrorCode code() {
+        return code;
+    }
+}
 ```
 
 - [ ] **Step 5: Run tests**
@@ -353,211 +383,249 @@ git commit -m "feat: add common value and error types"
 ### Task 3: Proposal Domain And Intent Use Case
 
 **Files:**
-- Modify: `portfolio-proposal/build.gradle.kts`
-- Create: `portfolio-proposal/src/main/kotlin/com/hyejin/portfolio/proposal/domain/RiskProfile.kt`
-- Create: `portfolio-proposal/src/main/kotlin/com/hyejin/portfolio/proposal/domain/ProposalMode.kt`
-- Create: `portfolio-proposal/src/main/kotlin/com/hyejin/portfolio/proposal/domain/SelectedAsset.kt`
-- Create: `portfolio-proposal/src/main/kotlin/com/hyejin/portfolio/proposal/domain/PortfolioIntent.kt`
-- Create: `portfolio-proposal/src/main/kotlin/com/hyejin/portfolio/proposal/application/port/in/CreatePortfolioIntentUseCase.kt`
-- Create: `portfolio-proposal/src/main/kotlin/com/hyejin/portfolio/proposal/application/port/out/SavePortfolioIntentPort.kt`
-- Create: `portfolio-proposal/src/main/kotlin/com/hyejin/portfolio/proposal/application/service/CreatePortfolioIntentService.kt`
-- Create: `portfolio-proposal/src/main/kotlin/com/hyejin/portfolio/proposal/adapter/out/InMemoryPortfolioIntentRepository.kt`
-- Test: `portfolio-proposal/src/test/kotlin/com/hyejin/portfolio/proposal/domain/PortfolioIntentTest.kt`
+- Modify: `portfolio-proposal/build.gradle`
+- Create: `portfolio-proposal/src/main/java/com/hyejin/portfolio/proposal/domain/RiskProfile.java`
+- Create: `portfolio-proposal/src/main/java/com/hyejin/portfolio/proposal/domain/ProposalMode.java`
+- Create: `portfolio-proposal/src/main/java/com/hyejin/portfolio/proposal/domain/SelectedAsset.java`
+- Create: `portfolio-proposal/src/main/java/com/hyejin/portfolio/proposal/domain/PortfolioIntent.java`
+- Create: `portfolio-proposal/src/main/java/com/hyejin/portfolio/proposal/application/port/in/CreatePortfolioIntentUseCase.java`
+- Create: `portfolio-proposal/src/main/java/com/hyejin/portfolio/proposal/application/port/out/SavePortfolioIntentPort.java`
+- Create: `portfolio-proposal/src/main/java/com/hyejin/portfolio/proposal/application/service/CreatePortfolioIntentService.java`
+- Create: `portfolio-proposal/src/main/java/com/hyejin/portfolio/proposal/adapter/out/InMemoryPortfolioIntentRepository.java`
+- Test: `portfolio-proposal/src/test/java/com/hyejin/portfolio/proposal/domain/PortfolioIntentTest.java`
 
 - [ ] **Step 1: Add common dependency to `portfolio-proposal`**
 
-```kotlin
+```groovy
 dependencies {
-    implementation(project(":portfolio-common"))
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
+    implementation project(':portfolio-common')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
 }
 ```
 
 - [ ] **Step 2: Write failing intent invariant test**
 
-```kotlin
-package com.hyejin.portfolio.proposal.domain
+```java
+package com.hyejin.portfolio.proposal.domain;
 
-import com.hyejin.portfolio.common.Money
-import java.math.BigDecimal
-import java.util.Currency
-import kotlin.test.Test
-import kotlin.test.assertFailsWith
+import com.hyejin.portfolio.common.Money;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.Currency;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PortfolioIntentTest {
     @Test
-    fun `intent requires at least one selected asset`() {
-        assertFailsWith<IllegalArgumentException> {
-            PortfolioIntent.create(
-                availableCash = Money(BigDecimal("10000000"), Currency.getInstance("KRW")),
-                monthlyContribution = null,
-                riskProfile = RiskProfile.GROWTH,
-                baseCurrency = Currency.getInstance("KRW"),
-                proposalMode = ProposalMode.CYCLE_MOMENTUM,
-                selectedAssets = emptyList(),
-            )
-        }
+    void intentRequiresAtLeastOneSelectedAsset() {
+        assertThatThrownBy(() -> PortfolioIntent.create(
+            new Money(new BigDecimal("10000000"), Currency.getInstance("KRW")),
+            null,
+            RiskProfile.GROWTH,
+            Currency.getInstance("KRW"),
+            ProposalMode.CYCLE_MOMENTUM,
+            List.of()
+        )).isInstanceOf(IllegalArgumentException.class);
     }
 }
 ```
 
 - [ ] **Step 3: Implement proposal domain**
 
-```kotlin
-package com.hyejin.portfolio.proposal.domain
+```java
+package com.hyejin.portfolio.proposal.domain;
 
-enum class RiskProfile {
+public enum RiskProfile {
     VERY_CONSERVATIVE,
     CONSERVATIVE,
     BALANCED,
     GROWTH,
-    AGGRESSIVE,
+    AGGRESSIVE
 }
 ```
 
-```kotlin
-package com.hyejin.portfolio.proposal.domain
+```java
+package com.hyejin.portfolio.proposal.domain;
 
-enum class ProposalMode {
-    CYCLE_MOMENTUM,
+public enum ProposalMode {
+    CYCLE_MOMENTUM
 }
 ```
 
-```kotlin
-package com.hyejin.portfolio.proposal.domain
+```java
+package com.hyejin.portfolio.proposal.domain;
 
-import java.util.Currency
-import java.util.UUID
+import java.util.Currency;
+import java.util.Objects;
+import java.util.UUID;
 
-data class SelectedAsset(
-    val assetId: UUID,
-    val symbol: String,
-    val displayName: String,
-    val assetType: String,
-    val market: String,
-    val currency: Currency,
-    val userThesis: String?,
-    val displayOrder: Int,
-)
-```
-
-```kotlin
-package com.hyejin.portfolio.proposal.domain
-
-import com.hyejin.portfolio.common.Money
-import java.time.Instant
-import java.util.Currency
-import java.util.UUID
-
-data class PortfolioIntent(
-    val id: UUID,
-    val availableCash: Money,
-    val monthlyContribution: Money?,
-    val riskProfile: RiskProfile,
-    val baseCurrency: Currency,
-    val proposalMode: ProposalMode,
-    val selectedAssets: List<SelectedAsset>,
-    val createdAt: Instant,
+public record SelectedAsset(
+    UUID assetId,
+    String symbol,
+    String displayName,
+    String assetType,
+    String market,
+    Currency currency,
+    String userThesis,
+    int displayOrder
 ) {
-    companion object {
-        fun create(
-            availableCash: Money,
-            monthlyContribution: Money?,
-            riskProfile: RiskProfile,
-            baseCurrency: Currency,
-            proposalMode: ProposalMode,
-            selectedAssets: List<SelectedAsset>,
-        ): PortfolioIntent {
-            require(selectedAssets.isNotEmpty()) { "selected assets must not be empty" }
-            return PortfolioIntent(
-                id = UUID.randomUUID(),
-                availableCash = availableCash,
-                monthlyContribution = monthlyContribution,
-                riskProfile = riskProfile,
-                baseCurrency = baseCurrency,
-                proposalMode = proposalMode,
-                selectedAssets = selectedAssets.sortedBy { it.displayOrder },
-                createdAt = Instant.now(),
-            )
+    public SelectedAsset {
+        Objects.requireNonNull(assetId, "assetId must not be null");
+        Objects.requireNonNull(symbol, "symbol must not be null");
+        Objects.requireNonNull(displayName, "displayName must not be null");
+        Objects.requireNonNull(assetType, "assetType must not be null");
+        Objects.requireNonNull(market, "market must not be null");
+        Objects.requireNonNull(currency, "currency must not be null");
+    }
+}
+```
+
+```java
+package com.hyejin.portfolio.proposal.domain;
+
+import com.hyejin.portfolio.common.Money;
+
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.Currency;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+public record PortfolioIntent(
+    UUID id,
+    Money availableCash,
+    Money monthlyContribution,
+    RiskProfile riskProfile,
+    Currency baseCurrency,
+    ProposalMode proposalMode,
+    List<SelectedAsset> selectedAssets,
+    Instant createdAt
+) {
+    public PortfolioIntent {
+        Objects.requireNonNull(id, "id must not be null");
+        Objects.requireNonNull(availableCash, "availableCash must not be null");
+        Objects.requireNonNull(riskProfile, "riskProfile must not be null");
+        Objects.requireNonNull(baseCurrency, "baseCurrency must not be null");
+        Objects.requireNonNull(proposalMode, "proposalMode must not be null");
+        if (selectedAssets == null || selectedAssets.isEmpty()) {
+            throw new IllegalArgumentException("selected assets must not be empty");
         }
+        selectedAssets = List.copyOf(selectedAssets);
+    }
+
+    public static PortfolioIntent create(
+        Money availableCash,
+        Money monthlyContribution,
+        RiskProfile riskProfile,
+        Currency baseCurrency,
+        ProposalMode proposalMode,
+        List<SelectedAsset> selectedAssets
+    ) {
+        var sortedAssets = selectedAssets.stream()
+            .sorted(Comparator.comparingInt(SelectedAsset::displayOrder))
+            .toList();
+        return new PortfolioIntent(
+            UUID.randomUUID(),
+            availableCash,
+            monthlyContribution,
+            riskProfile,
+            baseCurrency,
+            proposalMode,
+            sortedAssets,
+            Instant.now()
+        );
     }
 }
 ```
 
 - [ ] **Step 4: Implement intent use case and in-memory adapter**
 
-```kotlin
-package com.hyejin.portfolio.proposal.application.port.`in`
+```java
+package com.hyejin.portfolio.proposal.application.port.in;
 
-import com.hyejin.portfolio.common.Money
-import com.hyejin.portfolio.proposal.domain.PortfolioIntent
-import com.hyejin.portfolio.proposal.domain.ProposalMode
-import com.hyejin.portfolio.proposal.domain.RiskProfile
-import com.hyejin.portfolio.proposal.domain.SelectedAsset
-import java.util.Currency
+import com.hyejin.portfolio.common.Money;
+import com.hyejin.portfolio.proposal.domain.PortfolioIntent;
+import com.hyejin.portfolio.proposal.domain.ProposalMode;
+import com.hyejin.portfolio.proposal.domain.RiskProfile;
+import com.hyejin.portfolio.proposal.domain.SelectedAsset;
 
-interface CreatePortfolioIntentUseCase {
-    fun create(command: Command): PortfolioIntent
+import java.util.Currency;
+import java.util.List;
 
-    data class Command(
-        val availableCash: Money,
-        val monthlyContribution: Money?,
-        val riskProfile: RiskProfile,
-        val baseCurrency: Currency,
-        val proposalMode: ProposalMode,
-        val selectedAssets: List<SelectedAsset>,
-    )
-}
-```
+public interface CreatePortfolioIntentUseCase {
+    PortfolioIntent create(Command command);
 
-```kotlin
-package com.hyejin.portfolio.proposal.application.port.out
-
-import com.hyejin.portfolio.proposal.domain.PortfolioIntent
-
-interface SavePortfolioIntentPort {
-    fun save(intent: PortfolioIntent): PortfolioIntent
-}
-```
-
-```kotlin
-package com.hyejin.portfolio.proposal.application.service
-
-import com.hyejin.portfolio.proposal.application.port.`in`.CreatePortfolioIntentUseCase
-import com.hyejin.portfolio.proposal.application.port.out.SavePortfolioIntentPort
-import com.hyejin.portfolio.proposal.domain.PortfolioIntent
-
-class CreatePortfolioIntentService(
-    private val savePortfolioIntentPort: SavePortfolioIntentPort,
-) : CreatePortfolioIntentUseCase {
-    override fun create(command: CreatePortfolioIntentUseCase.Command): PortfolioIntent {
-        val intent = PortfolioIntent.create(
-            availableCash = command.availableCash,
-            monthlyContribution = command.monthlyContribution,
-            riskProfile = command.riskProfile,
-            baseCurrency = command.baseCurrency,
-            proposalMode = command.proposalMode,
-            selectedAssets = command.selectedAssets,
-        )
-        return savePortfolioIntentPort.save(intent)
+    record Command(
+        Money availableCash,
+        Money monthlyContribution,
+        RiskProfile riskProfile,
+        Currency baseCurrency,
+        ProposalMode proposalMode,
+        List<SelectedAsset> selectedAssets
+    ) {
     }
 }
 ```
 
-```kotlin
-package com.hyejin.portfolio.proposal.adapter.out
+```java
+package com.hyejin.portfolio.proposal.application.port.out;
 
-import com.hyejin.portfolio.proposal.application.port.out.SavePortfolioIntentPort
-import com.hyejin.portfolio.proposal.domain.PortfolioIntent
-import java.util.concurrent.ConcurrentHashMap
+import com.hyejin.portfolio.proposal.domain.PortfolioIntent;
 
-class InMemoryPortfolioIntentRepository : SavePortfolioIntentPort {
-    private val intents = ConcurrentHashMap<java.util.UUID, PortfolioIntent>()
+public interface SavePortfolioIntentPort {
+    PortfolioIntent save(PortfolioIntent intent);
+}
+```
 
-    override fun save(intent: PortfolioIntent): PortfolioIntent {
-        intents[intent.id] = intent
-        return intent
+```java
+package com.hyejin.portfolio.proposal.application.service;
+
+import com.hyejin.portfolio.proposal.application.port.in.CreatePortfolioIntentUseCase;
+import com.hyejin.portfolio.proposal.application.port.out.SavePortfolioIntentPort;
+import com.hyejin.portfolio.proposal.domain.PortfolioIntent;
+
+public class CreatePortfolioIntentService implements CreatePortfolioIntentUseCase {
+    private final SavePortfolioIntentPort savePortfolioIntentPort;
+
+    public CreatePortfolioIntentService(SavePortfolioIntentPort savePortfolioIntentPort) {
+        this.savePortfolioIntentPort = savePortfolioIntentPort;
+    }
+
+    @Override
+    public PortfolioIntent create(Command command) {
+        var intent = PortfolioIntent.create(
+            command.availableCash(),
+            command.monthlyContribution(),
+            command.riskProfile(),
+            command.baseCurrency(),
+            command.proposalMode(),
+            command.selectedAssets()
+        );
+        return savePortfolioIntentPort.save(intent);
+    }
+}
+```
+
+```java
+package com.hyejin.portfolio.proposal.adapter.out;
+
+import com.hyejin.portfolio.proposal.application.port.out.SavePortfolioIntentPort;
+import com.hyejin.portfolio.proposal.domain.PortfolioIntent;
+
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class InMemoryPortfolioIntentRepository implements SavePortfolioIntentPort {
+    private final ConcurrentHashMap<UUID, PortfolioIntent> intents = new ConcurrentHashMap<>();
+
+    @Override
+    public PortfolioIntent save(PortfolioIntent intent) {
+        intents.put(intent.id(), intent);
+        return intent;
     }
 }
 ```
@@ -582,231 +650,276 @@ git commit -m "feat: add portfolio intent domain"
 ### Task 4: Allocation And Simulation Domains
 
 **Files:**
-- Modify: `portfolio-allocation/build.gradle.kts`
-- Modify: `portfolio-simulation/build.gradle.kts`
-- Create: `portfolio-allocation/src/main/kotlin/com/hyejin/portfolio/allocation/domain/AllocationPlan.kt`
-- Create: `portfolio-simulation/src/main/kotlin/com/hyejin/portfolio/simulation/domain/CapitalGrowthProjection.kt`
-- Create: `portfolio-simulation/src/main/kotlin/com/hyejin/portfolio/simulation/application/port/in/GenerateCapitalGrowthProjectionUseCase.kt`
-- Create: `portfolio-simulation/src/main/kotlin/com/hyejin/portfolio/simulation/application/service/GenerateCapitalGrowthProjectionService.kt`
-- Test: `portfolio-allocation/src/test/kotlin/com/hyejin/portfolio/allocation/domain/AllocationPlanTest.kt`
-- Test: `portfolio-simulation/src/test/kotlin/com/hyejin/portfolio/simulation/application/service/GenerateCapitalGrowthProjectionServiceTest.kt`
+- Modify: `portfolio-allocation/build.gradle`
+- Modify: `portfolio-simulation/build.gradle`
+- Create: `portfolio-allocation/src/main/java/com/hyejin/portfolio/allocation/domain/AllocationPlan.java`
+- Create: `portfolio-allocation/src/main/java/com/hyejin/portfolio/allocation/domain/ProposedAllocation.java`
+- Create: `portfolio-simulation/src/main/java/com/hyejin/portfolio/simulation/domain/CapitalGrowthProjection.java`
+- Create: `portfolio-simulation/src/main/java/com/hyejin/portfolio/simulation/domain/CapitalGrowthPoint.java`
+- Create: `portfolio-simulation/src/main/java/com/hyejin/portfolio/simulation/domain/Scenario.java`
+- Create: `portfolio-simulation/src/main/java/com/hyejin/portfolio/simulation/application/port/in/GenerateCapitalGrowthProjectionUseCase.java`
+- Create: `portfolio-simulation/src/main/java/com/hyejin/portfolio/simulation/application/service/GenerateCapitalGrowthProjectionService.java`
+- Test: `portfolio-allocation/src/test/java/com/hyejin/portfolio/allocation/domain/AllocationPlanTest.java`
+- Test: `portfolio-simulation/src/test/java/com/hyejin/portfolio/simulation/application/service/GenerateCapitalGrowthProjectionServiceTest.java`
 
 - [ ] **Step 1: Add common dependency to allocation and simulation**
 
 Add to both module Gradle files:
 
-```kotlin
+```groovy
 dependencies {
-    implementation(project(":portfolio-common"))
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
+    implementation project(':portfolio-common')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
 }
 ```
 
-- [ ] **Step 2: Implement `AllocationPlan`**
+- [ ] **Step 2: Implement allocation domain**
 
-```kotlin
-package com.hyejin.portfolio.allocation.domain
+```java
+package com.hyejin.portfolio.allocation.domain;
 
-import com.hyejin.portfolio.common.Percentage
-import java.util.UUID
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
-data class AllocationPlan(
-    val id: UUID,
-    val proposalId: UUID,
-    val recommendedHorizonMonths: Int,
-    val allocations: List<ProposedAllocation>,
+public record AllocationPlan(
+    UUID id,
+    UUID proposalId,
+    int recommendedHorizonMonths,
+    List<ProposedAllocation> allocations
 ) {
-    init {
-        require(recommendedHorizonMonths > 0) { "recommended horizon must be positive" }
-        require(allocations.isNotEmpty()) { "allocations must not be empty" }
-        require(allocations.map { it.initialWeight.value }.reduce { acc, value -> acc + value }.compareTo(java.math.BigDecimal.ONE) == 0) {
-            "initial weights must sum to 1"
+    public AllocationPlan {
+        if (recommendedHorizonMonths <= 0) {
+            throw new IllegalArgumentException("recommended horizon must be positive");
         }
+        if (allocations == null || allocations.isEmpty()) {
+            throw new IllegalArgumentException("allocations must not be empty");
+        }
+        var sum = allocations.stream()
+            .map(allocation -> allocation.initialWeight().value())
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (sum.compareTo(BigDecimal.ONE) != 0) {
+            throw new IllegalArgumentException("initial weights must sum to 1");
+        }
+        allocations = List.copyOf(allocations);
     }
 }
+```
 
-data class ProposedAllocation(
-    val assetId: UUID,
-    val initialWeight: Percentage,
-    val monthlyWeight: Percentage?,
-    val role: String,
-    val rationaleAnchor: String,
-)
+```java
+package com.hyejin.portfolio.allocation.domain;
+
+import com.hyejin.portfolio.common.Percentage;
+
+import java.util.UUID;
+
+public record ProposedAllocation(
+    UUID assetId,
+    Percentage initialWeight,
+    Percentage monthlyWeight,
+    String role,
+    String rationaleAnchor
+) {
+}
 ```
 
 - [ ] **Step 3: Write allocation invariant test**
 
-```kotlin
-package com.hyejin.portfolio.allocation.domain
+```java
+package com.hyejin.portfolio.allocation.domain;
 
-import com.hyejin.portfolio.common.Percentage
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertFailsWith
+import com.hyejin.portfolio.common.Percentage;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AllocationPlanTest {
     @Test
-    fun `initial weights must sum to one`() {
-        assertFailsWith<IllegalArgumentException> {
-            AllocationPlan(
-                id = UUID.randomUUID(),
-                proposalId = UUID.randomUUID(),
-                recommendedHorizonMonths = 12,
-                allocations = listOf(
-                    ProposedAllocation(UUID.randomUUID(), Percentage.of("0.40".toBigDecimal()), null, "core", "r1"),
-                    ProposedAllocation(UUID.randomUUID(), Percentage.of("0.40".toBigDecimal()), null, "satellite", "r2"),
-                ),
+    void initialWeightsMustSumToOne() {
+        assertThatThrownBy(() -> new AllocationPlan(
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            12,
+            List.of(
+                new ProposedAllocation(UUID.randomUUID(), Percentage.of(new BigDecimal("0.40")), null, "core", "r1"),
+                new ProposedAllocation(UUID.randomUUID(), Percentage.of(new BigDecimal("0.40")), null, "satellite", "r2")
             )
-        }
+        )).isInstanceOf(IllegalArgumentException.class);
     }
 }
 ```
 
-- [ ] **Step 4: Implement capital growth projection**
+- [ ] **Step 4: Implement simulation domain and service**
 
-```kotlin
-package com.hyejin.portfolio.simulation.domain
+```java
+package com.hyejin.portfolio.simulation.domain;
 
-import java.math.BigDecimal
-import java.util.UUID
-
-data class CapitalGrowthProjection(
-    val id: UUID,
-    val proposalId: UUID,
-    val scenario: Scenario,
-    val points: List<CapitalGrowthPoint>,
-) {
-    init {
-        require(points.isNotEmpty()) { "projection points must not be empty" }
-        require(points == points.sortedBy { it.month }) { "projection points must be sorted by month" }
-    }
-}
-
-data class CapitalGrowthPoint(
-    val month: Int,
-    val cumulativePrincipal: BigDecimal,
-    val expectedValue: BigDecimal,
-    val expectedProfit: BigDecimal,
-) {
-    init {
-        require(month >= 0) { "month must not be negative" }
-        require(cumulativePrincipal >= BigDecimal.ZERO) { "principal must not be negative" }
-    }
-}
-
-enum class Scenario {
+public enum Scenario {
     BEAR,
     BASE,
-    BULL,
+    BULL
 }
 ```
 
-```kotlin
-package com.hyejin.portfolio.simulation.application.port.`in`
+```java
+package com.hyejin.portfolio.simulation.domain;
 
-import com.hyejin.portfolio.simulation.domain.CapitalGrowthProjection
-import com.hyejin.portfolio.simulation.domain.Scenario
-import java.math.BigDecimal
-import java.util.UUID
+import java.math.BigDecimal;
 
-interface GenerateCapitalGrowthProjectionUseCase {
-    fun generate(command: Command): CapitalGrowthProjection
-
-    data class Command(
-        val proposalId: UUID,
-        val scenario: Scenario,
-        val initialPrincipal: BigDecimal,
-        val monthlyContribution: BigDecimal,
-        val annualReturnRate: BigDecimal,
-        val horizonMonths: Int,
-        val intervalMonths: Int = 6,
-    )
+public record CapitalGrowthPoint(
+    int month,
+    BigDecimal cumulativePrincipal,
+    BigDecimal expectedValue,
+    BigDecimal expectedProfit
+) {
+    public CapitalGrowthPoint {
+        if (month < 0) {
+            throw new IllegalArgumentException("month must not be negative");
+        }
+        if (cumulativePrincipal.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("principal must not be negative");
+        }
+    }
 }
 ```
 
-```kotlin
-package com.hyejin.portfolio.simulation.application.service
+```java
+package com.hyejin.portfolio.simulation.domain;
 
-import com.hyejin.portfolio.simulation.application.port.`in`.GenerateCapitalGrowthProjectionUseCase
-import com.hyejin.portfolio.simulation.domain.CapitalGrowthPoint
-import com.hyejin.portfolio.simulation.domain.CapitalGrowthProjection
-import java.math.BigDecimal
-import java.math.MathContext
-import java.util.UUID
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 
-class GenerateCapitalGrowthProjectionService : GenerateCapitalGrowthProjectionUseCase {
-    override fun generate(command: GenerateCapitalGrowthProjectionUseCase.Command): CapitalGrowthProjection {
-        require(command.horizonMonths > 0) { "horizon must be positive" }
-        require(command.intervalMonths > 0) { "interval must be positive" }
+public record CapitalGrowthProjection(
+    UUID id,
+    UUID proposalId,
+    Scenario scenario,
+    List<CapitalGrowthPoint> points
+) {
+    public CapitalGrowthProjection {
+        if (points == null || points.isEmpty()) {
+            throw new IllegalArgumentException("projection points must not be empty");
+        }
+        var sorted = points.stream().sorted(Comparator.comparingInt(CapitalGrowthPoint::month)).toList();
+        if (!points.equals(sorted)) {
+            throw new IllegalArgumentException("projection points must be sorted by month");
+        }
+        points = List.copyOf(points);
+    }
+}
+```
 
-        val monthlyRate = command.annualReturnRate.divide(BigDecimal("12"), MathContext.DECIMAL64)
-        val points = (0..command.horizonMonths step command.intervalMonths).map { month ->
-            val principal = command.initialPrincipal + command.monthlyContribution.multiply(BigDecimal(month))
-            val value = compound(command.initialPrincipal, monthlyRate, month) +
-                monthlyContributionFutureValue(command.monthlyContribution, monthlyRate, month)
-            CapitalGrowthPoint(
-                month = month,
-                cumulativePrincipal = principal,
-                expectedValue = value,
-                expectedProfit = value - principal,
-            )
+```java
+package com.hyejin.portfolio.simulation.application.port.in;
+
+import com.hyejin.portfolio.simulation.domain.CapitalGrowthProjection;
+import com.hyejin.portfolio.simulation.domain.Scenario;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public interface GenerateCapitalGrowthProjectionUseCase {
+    CapitalGrowthProjection generate(Command command);
+
+    record Command(
+        UUID proposalId,
+        Scenario scenario,
+        BigDecimal initialPrincipal,
+        BigDecimal monthlyContribution,
+        BigDecimal annualReturnRate,
+        int horizonMonths,
+        int intervalMonths
+    ) {
+    }
+}
+```
+
+```java
+package com.hyejin.portfolio.simulation.application.service;
+
+import com.hyejin.portfolio.simulation.application.port.in.GenerateCapitalGrowthProjectionUseCase;
+import com.hyejin.portfolio.simulation.domain.CapitalGrowthPoint;
+import com.hyejin.portfolio.simulation.domain.CapitalGrowthProjection;
+
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.util.ArrayList;
+import java.util.UUID;
+
+public class GenerateCapitalGrowthProjectionService implements GenerateCapitalGrowthProjectionUseCase {
+    @Override
+    public CapitalGrowthProjection generate(Command command) {
+        if (command.horizonMonths() <= 0) {
+            throw new IllegalArgumentException("horizon must be positive");
+        }
+        if (command.intervalMonths() <= 0) {
+            throw new IllegalArgumentException("interval must be positive");
         }
 
-        return CapitalGrowthProjection(
-            id = UUID.randomUUID(),
-            proposalId = command.proposalId,
-            scenario = command.scenario,
-            points = points,
-        )
+        var monthlyRate = command.annualReturnRate().divide(new BigDecimal("12"), MathContext.DECIMAL64);
+        var points = new ArrayList<CapitalGrowthPoint>();
+        for (int month = 0; month <= command.horizonMonths(); month += command.intervalMonths()) {
+            var principal = command.initialPrincipal().add(command.monthlyContribution().multiply(BigDecimal.valueOf(month)));
+            var value = compound(command.initialPrincipal(), monthlyRate, month)
+                .add(monthlyContributionFutureValue(command.monthlyContribution(), monthlyRate, month));
+            points.add(new CapitalGrowthPoint(month, principal, value, value.subtract(principal)));
+        }
+
+        return new CapitalGrowthProjection(UUID.randomUUID(), command.proposalId(), command.scenario(), points);
     }
 
-    private fun compound(principal: BigDecimal, monthlyRate: BigDecimal, months: Int): BigDecimal {
-        var value = principal
-        repeat(months) {
-            value = value.multiply(BigDecimal.ONE + monthlyRate, MathContext.DECIMAL64)
+    private BigDecimal compound(BigDecimal principal, BigDecimal monthlyRate, int months) {
+        var value = principal;
+        for (int i = 0; i < months; i++) {
+            value = value.multiply(BigDecimal.ONE.add(monthlyRate), MathContext.DECIMAL64);
         }
-        return value
+        return value;
     }
 
-    private fun monthlyContributionFutureValue(contribution: BigDecimal, monthlyRate: BigDecimal, months: Int): BigDecimal {
-        var value = BigDecimal.ZERO
-        repeat(months) {
-            value = (value + contribution).multiply(BigDecimal.ONE + monthlyRate, MathContext.DECIMAL64)
+    private BigDecimal monthlyContributionFutureValue(BigDecimal contribution, BigDecimal monthlyRate, int months) {
+        var value = BigDecimal.ZERO;
+        for (int i = 0; i < months; i++) {
+            value = value.add(contribution).multiply(BigDecimal.ONE.add(monthlyRate), MathContext.DECIMAL64);
         }
-        return value
+        return value;
     }
 }
 ```
 
 - [ ] **Step 5: Write simulation test**
 
-```kotlin
-package com.hyejin.portfolio.simulation.application.service
+```java
+package com.hyejin.portfolio.simulation.application.service;
 
-import com.hyejin.portfolio.simulation.application.port.`in`.GenerateCapitalGrowthProjectionUseCase
-import com.hyejin.portfolio.simulation.domain.Scenario
-import java.math.BigDecimal
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import com.hyejin.portfolio.simulation.application.port.in.GenerateCapitalGrowthProjectionUseCase;
+import com.hyejin.portfolio.simulation.domain.Scenario;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class GenerateCapitalGrowthProjectionServiceTest {
     @Test
-    fun `creates six month interval capital growth points`() {
-        val service = GenerateCapitalGrowthProjectionService()
-        val projection = service.generate(
-            GenerateCapitalGrowthProjectionUseCase.Command(
-                proposalId = UUID.randomUUID(),
-                scenario = Scenario.BASE,
-                initialPrincipal = BigDecimal("10000000"),
-                monthlyContribution = BigDecimal("1000000"),
-                annualReturnRate = BigDecimal("0.06"),
-                horizonMonths = 12,
-            ),
-        )
+    void createsSixMonthIntervalCapitalGrowthPoints() {
+        var service = new GenerateCapitalGrowthProjectionService();
+        var projection = service.generate(new GenerateCapitalGrowthProjectionUseCase.Command(
+            UUID.randomUUID(),
+            Scenario.BASE,
+            new BigDecimal("10000000"),
+            new BigDecimal("1000000"),
+            new BigDecimal("0.06"),
+            12,
+            6
+        ));
 
-        assertEquals(listOf(0, 6, 12), projection.points.map { it.month })
+        assertThat(projection.points()).extracting("month").containsExactly(0, 6, 12);
     }
 }
 ```
@@ -831,153 +944,175 @@ git commit -m "feat: add allocation and simulation domains"
 ### Task 5: Evidence Domain And Evidence Links
 
 **Files:**
-- Create: `portfolio-evidence/src/main/kotlin/com/hyejin/portfolio/evidence/domain/Claim.kt`
-- Create: `portfolio-evidence/src/main/kotlin/com/hyejin/portfolio/evidence/domain/EvidenceLink.kt`
-- Create: `portfolio-evidence/src/main/kotlin/com/hyejin/portfolio/evidence/application/port/in/CreateEvidenceLinksUseCase.kt`
-- Create: `portfolio-evidence/src/main/kotlin/com/hyejin/portfolio/evidence/application/service/CreateEvidenceLinksService.kt`
-- Test: `portfolio-evidence/src/test/kotlin/com/hyejin/portfolio/evidence/domain/ClaimTest.kt`
+- Create: `portfolio-evidence/src/main/java/com/hyejin/portfolio/evidence/domain/Claim.java`
+- Create: `portfolio-evidence/src/main/java/com/hyejin/portfolio/evidence/domain/ClaimType.java`
+- Create: `portfolio-evidence/src/main/java/com/hyejin/portfolio/evidence/domain/Confidence.java`
+- Create: `portfolio-evidence/src/main/java/com/hyejin/portfolio/evidence/domain/EvidenceLink.java`
+- Create: `portfolio-evidence/src/main/java/com/hyejin/portfolio/evidence/domain/RelationType.java`
+- Create: `portfolio-evidence/src/main/java/com/hyejin/portfolio/evidence/application/port/in/CreateEvidenceLinksUseCase.java`
+- Create: `portfolio-evidence/src/main/java/com/hyejin/portfolio/evidence/application/service/CreateEvidenceLinksService.java`
+- Test: `portfolio-evidence/src/test/java/com/hyejin/portfolio/evidence/domain/ClaimTest.java`
 
 - [ ] **Step 1: Implement evidence domain**
 
-```kotlin
-package com.hyejin.portfolio.evidence.domain
+```java
+package com.hyejin.portfolio.evidence.domain;
 
-import java.util.UUID
-
-data class Claim(
-    val id: UUID,
-    val text: String,
-    val type: ClaimType,
-    val confidence: Confidence,
-    val sourceIds: List<UUID>,
-    val limitation: String?,
-) {
-    init {
-        require(text.isNotBlank()) { "claim text must not be blank" }
-        if (type == ClaimType.FACT) {
-            require(sourceIds.isNotEmpty()) { "FACT claim requires at least one source" }
-        }
-        if (type == ClaimType.INTERPRETATION) {
-            require(!limitation.isNullOrBlank()) { "INTERPRETATION claim requires limitation or counterpoint" }
-        }
-    }
-}
-
-enum class ClaimType {
+public enum ClaimType {
     FACT,
     ESTIMATE,
-    INTERPRETATION,
-}
-
-enum class Confidence {
-    LOW,
-    MEDIUM,
-    HIGH,
+    INTERPRETATION
 }
 ```
 
-```kotlin
-package com.hyejin.portfolio.evidence.domain
+```java
+package com.hyejin.portfolio.evidence.domain;
 
-import java.util.UUID
+public enum Confidence {
+    LOW,
+    MEDIUM,
+    HIGH
+}
+```
 
-data class EvidenceLink(
-    val id: UUID,
-    val claimId: UUID,
-    val targetModule: String,
-    val targetType: String,
-    val targetId: String,
-    val targetAnchor: String,
-    val relationType: RelationType,
-)
+```java
+package com.hyejin.portfolio.evidence.domain;
 
-enum class RelationType {
+import java.util.List;
+import java.util.UUID;
+
+public record Claim(
+    UUID id,
+    String text,
+    ClaimType type,
+    Confidence confidence,
+    List<UUID> sourceIds,
+    String limitation
+) {
+    public Claim {
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("claim text must not be blank");
+        }
+        if (type == ClaimType.FACT && (sourceIds == null || sourceIds.isEmpty())) {
+            throw new IllegalArgumentException("FACT claim requires at least one source");
+        }
+        if (type == ClaimType.INTERPRETATION && (limitation == null || limitation.isBlank())) {
+            throw new IllegalArgumentException("INTERPRETATION claim requires limitation or counterpoint");
+        }
+        sourceIds = sourceIds == null ? List.of() : List.copyOf(sourceIds);
+    }
+}
+```
+
+```java
+package com.hyejin.portfolio.evidence.domain;
+
+public enum RelationType {
     SUPPORTS,
     CONTRADICTS,
-    CONTEXTUALIZES,
+    CONTEXTUALIZES
+}
+```
+
+```java
+package com.hyejin.portfolio.evidence.domain;
+
+import java.util.UUID;
+
+public record EvidenceLink(
+    UUID id,
+    UUID claimId,
+    String targetModule,
+    String targetType,
+    String targetId,
+    String targetAnchor,
+    RelationType relationType
+) {
 }
 ```
 
 - [ ] **Step 2: Write claim invariant test**
 
-```kotlin
-package com.hyejin.portfolio.evidence.domain
+```java
+package com.hyejin.portfolio.evidence.domain;
 
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertFailsWith
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ClaimTest {
     @Test
-    fun `fact claim requires source`() {
-        assertFailsWith<IllegalArgumentException> {
-            Claim(
-                id = UUID.randomUUID(),
-                text = "Samsung Electronics is listed on KRX.",
-                type = ClaimType.FACT,
-                confidence = Confidence.HIGH,
-                sourceIds = emptyList(),
-                limitation = null,
-            )
-        }
+    void factClaimRequiresSource() {
+        assertThatThrownBy(() -> new Claim(
+            UUID.randomUUID(),
+            "Samsung Electronics is listed on KRX.",
+            ClaimType.FACT,
+            Confidence.HIGH,
+            List.of(),
+            null
+        )).isInstanceOf(IllegalArgumentException.class);
     }
 }
 ```
 
 - [ ] **Step 3: Implement evidence use case**
 
-```kotlin
-package com.hyejin.portfolio.evidence.application.port.`in`
+```java
+package com.hyejin.portfolio.evidence.application.port.in;
 
-import com.hyejin.portfolio.evidence.domain.Claim
-import com.hyejin.portfolio.evidence.domain.EvidenceLink
-import com.hyejin.portfolio.evidence.domain.RelationType
-import java.util.UUID
+import com.hyejin.portfolio.evidence.domain.Claim;
+import com.hyejin.portfolio.evidence.domain.EvidenceLink;
+import com.hyejin.portfolio.evidence.domain.RelationType;
 
-interface CreateEvidenceLinksUseCase {
-    fun create(command: Command): Result
+import java.util.List;
+import java.util.UUID;
 
-    data class Command(
-        val claim: Claim,
-        val targets: List<TargetReference>,
-    )
+public interface CreateEvidenceLinksUseCase {
+    Result create(Command command);
 
-    data class TargetReference(
-        val targetModule: String,
-        val targetType: String,
-        val targetId: String,
-        val targetAnchor: String,
-        val relationType: RelationType,
-    )
+    record Command(Claim claim, List<TargetReference> targets) {
+    }
 
-    data class Result(
-        val claimId: UUID,
-        val links: List<EvidenceLink>,
-    )
+    record TargetReference(
+        String targetModule,
+        String targetType,
+        String targetId,
+        String targetAnchor,
+        RelationType relationType
+    ) {
+    }
+
+    record Result(UUID claimId, List<EvidenceLink> links) {
+    }
 }
 ```
 
-```kotlin
-package com.hyejin.portfolio.evidence.application.service
+```java
+package com.hyejin.portfolio.evidence.application.service;
 
-import com.hyejin.portfolio.evidence.application.port.`in`.CreateEvidenceLinksUseCase
-import com.hyejin.portfolio.evidence.domain.EvidenceLink
-import java.util.UUID
+import com.hyejin.portfolio.evidence.application.port.in.CreateEvidenceLinksUseCase;
+import com.hyejin.portfolio.evidence.domain.EvidenceLink;
 
-class CreateEvidenceLinksService : CreateEvidenceLinksUseCase {
-    override fun create(command: CreateEvidenceLinksUseCase.Command): CreateEvidenceLinksUseCase.Result {
-        val links = command.targets.map { target ->
-            EvidenceLink(
-                id = UUID.randomUUID(),
-                claimId = command.claim.id,
-                targetModule = target.targetModule,
-                targetType = target.targetType,
-                targetId = target.targetId,
-                targetAnchor = target.targetAnchor,
-                relationType = target.relationType,
-            )
-        }
-        return CreateEvidenceLinksUseCase.Result(command.claim.id, links)
+import java.util.UUID;
+
+public class CreateEvidenceLinksService implements CreateEvidenceLinksUseCase {
+    @Override
+    public Result create(Command command) {
+        var links = command.targets().stream()
+            .map(target -> new EvidenceLink(
+                UUID.randomUUID(),
+                command.claim().id(),
+                target.targetModule(),
+                target.targetType(),
+                target.targetId(),
+                target.targetAnchor(),
+                target.relationType()
+            ))
+            .toList();
+        return new Result(command.claim().id(), links);
     }
 }
 ```
@@ -1002,258 +1137,248 @@ git commit -m "feat: add evidence claim and link domain"
 ### Task 6: API Query Service And Controllers
 
 **Files:**
-- Create: `portfolio-api/src/main/kotlin/com/hyejin/portfolio/api/PortfolioApiApplication.kt`
-- Create: `portfolio-api/src/main/kotlin/com/hyejin/portfolio/api/adapter/in/web/PortfolioIntentController.kt`
-- Create: `portfolio-api/src/main/kotlin/com/hyejin/portfolio/api/adapter/in/web/PortfolioProposalController.kt`
-- Create: `portfolio-api/src/main/kotlin/com/hyejin/portfolio/api/adapter/in/web/EvidenceController.kt`
-- Create: `portfolio-api/src/main/kotlin/com/hyejin/portfolio/api/application/service/ProposalQueryService.kt`
-- Create: `portfolio-api/src/main/kotlin/com/hyejin/portfolio/api/application/service/ProposalDetailResponse.kt`
-- Test: `portfolio-api/src/test/kotlin/com/hyejin/portfolio/api/application/service/ProposalQueryServiceTest.kt`
+- Create: `portfolio-api/src/main/java/com/hyejin/portfolio/api/PortfolioApiApplication.java`
+- Create: `portfolio-api/src/main/java/com/hyejin/portfolio/api/adapter/in/web/PortfolioIntentController.java`
+- Create: `portfolio-api/src/main/java/com/hyejin/portfolio/api/adapter/in/web/PortfolioProposalController.java`
+- Create: `portfolio-api/src/main/java/com/hyejin/portfolio/api/adapter/in/web/EvidenceController.java`
+- Create: `portfolio-api/src/main/java/com/hyejin/portfolio/api/application/service/ProposalQueryService.java`
+- Create: `portfolio-api/src/main/java/com/hyejin/portfolio/api/application/service/ProposalDetailResponse.java`
+- Create: `portfolio-api/src/main/java/com/hyejin/portfolio/api/application/service/EvidenceDetailResponse.java`
+- Test: `portfolio-api/src/test/java/com/hyejin/portfolio/api/application/service/ProposalQueryServiceTest.java`
 
 - [ ] **Step 1: Create Spring Boot app**
 
-```kotlin
-package com.hyejin.portfolio.api
+```java
+package com.hyejin.portfolio.api;
 
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.runApplication
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-class PortfolioApiApplication
-
-fun main(args: Array<String>) {
-    runApplication<PortfolioApiApplication>(*args)
+public class PortfolioApiApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(PortfolioApiApplication.class, args);
+    }
 }
 ```
 
-- [ ] **Step 2: Create proposal response DTO**
+- [ ] **Step 2: Create response DTOs**
 
-```kotlin
-package com.hyejin.portfolio.api.application.service
+```java
+package com.hyejin.portfolio.api.application.service;
 
-import java.math.BigDecimal
-import java.util.UUID
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
-data class ProposalDetailResponse(
-    val proposalId: UUID,
-    val status: String,
-    val title: String,
-    val recommendedHorizonMonths: Int,
-    val allocations: List<AllocationResponse>,
-    val capitalGrowth: List<CapitalGrowthPointResponse>,
-)
+public record ProposalDetailResponse(
+    UUID proposalId,
+    String status,
+    String title,
+    int recommendedHorizonMonths,
+    List<AllocationResponse> allocations,
+    List<CapitalGrowthPointResponse> capitalGrowth
+) {
+    public record AllocationResponse(UUID assetId, BigDecimal initialWeight, String role) {
+    }
 
-data class AllocationResponse(
-    val assetId: UUID,
-    val initialWeight: BigDecimal,
-    val role: String,
-)
+    public record CapitalGrowthPointResponse(
+        int month,
+        BigDecimal cumulativePrincipal,
+        BigDecimal expectedValue,
+        BigDecimal expectedProfit
+    ) {
+    }
+}
+```
 
-data class CapitalGrowthPointResponse(
-    val month: Int,
-    val cumulativePrincipal: BigDecimal,
-    val expectedValue: BigDecimal,
-    val expectedProfit: BigDecimal,
-)
+```java
+package com.hyejin.portfolio.api.application.service;
 
-data class EvidenceDetailResponse(
-    val evidenceId: UUID,
-    val claim: String,
-    val claimType: String,
-    val confidence: String,
-    val sources: List<String>,
-    val limitations: List<String>,
-)
+import java.util.List;
+import java.util.UUID;
+
+public record EvidenceDetailResponse(
+    UUID evidenceId,
+    String claim,
+    String claimType,
+    String confidence,
+    List<String> sources,
+    List<String> limitations
+) {
+}
 ```
 
 - [ ] **Step 3: Create `ProposalQueryService`**
 
-```kotlin
-package com.hyejin.portfolio.api.application.service
+```java
+package com.hyejin.portfolio.api.application.service;
 
-import java.util.UUID
+import org.springframework.stereotype.Service;
 
-class ProposalQueryService {
-    fun getProposal(proposalId: UUID): ProposalDetailResponse {
-        return ProposalDetailResponse(
-            proposalId = proposalId,
-            status = "COMPLETED",
-            title = "Mock cycle momentum portfolio proposal",
-            recommendedHorizonMonths = 12,
-            allocations = emptyList(),
-            capitalGrowth = emptyList(),
-        )
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class ProposalQueryService {
+    public ProposalDetailResponse getProposal(UUID proposalId) {
+        return new ProposalDetailResponse(
+            proposalId,
+            "COMPLETED",
+            "Mock cycle momentum portfolio proposal",
+            12,
+            List.of(),
+            List.of()
+        );
     }
 
-    fun getEvidence(evidenceId: UUID): EvidenceDetailResponse {
-        return EvidenceDetailResponse(
-            evidenceId = evidenceId,
-            claim = "Mock evidence-backed claim",
-            claimType = "INTERPRETATION",
-            confidence = "MEDIUM",
-            sources = listOf("mock-source"),
-            limitations = listOf("mock data only"),
-        )
+    public EvidenceDetailResponse getEvidence(UUID evidenceId) {
+        return new EvidenceDetailResponse(
+            evidenceId,
+            "Mock evidence-backed claim",
+            "INTERPRETATION",
+            "MEDIUM",
+            List.of("mock-source"),
+            List.of("mock data only")
+        );
     }
 }
 ```
 
 - [ ] **Step 4: Create controllers that do not compose directly**
 
-```kotlin
-package com.hyejin.portfolio.api.adapter.`in`.web
+```java
+package com.hyejin.portfolio.api.adapter.in.web;
 
-import com.hyejin.portfolio.api.application.service.ProposalQueryService
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
+import com.hyejin.portfolio.api.application.service.ProposalQueryService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/portfolio-proposals")
-class PortfolioProposalController(
-    private val proposalQueryService: ProposalQueryService,
-) {
+public class PortfolioProposalController {
+    private final ProposalQueryService proposalQueryService;
+
+    public PortfolioProposalController(ProposalQueryService proposalQueryService) {
+        this.proposalQueryService = proposalQueryService;
+    }
+
     @GetMapping("/{proposalId}")
-    fun getProposal(@PathVariable proposalId: UUID) = proposalQueryService.getProposal(proposalId)
+    public Object getProposal(@PathVariable UUID proposalId) {
+        return proposalQueryService.getProposal(proposalId);
+    }
 
     @PostMapping
-    fun createProposal(): CreateProposalResponse {
-        return CreateProposalResponse(
-            proposalId = UUID.randomUUID(),
-            status = "QUEUED",
-        )
+    public CreateProposalResponse createProposal() {
+        return new CreateProposalResponse(UUID.randomUUID(), "QUEUED");
+    }
+
+    public record CreateProposalResponse(UUID proposalId, String status) {
     }
 }
-
-data class CreateProposalResponse(
-    val proposalId: UUID,
-    val status: String,
-)
 ```
 
-```kotlin
-package com.hyejin.portfolio.api.adapter.`in`.web
+```java
+package com.hyejin.portfolio.api.adapter.in.web;
 
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
-import java.math.BigDecimal
-import java.util.UUID
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/portfolio-intents")
-class PortfolioIntentController {
+public class PortfolioIntentController {
     @PostMapping
-    fun createIntent(@RequestBody request: CreateIntentRequest): CreateIntentResponse {
-        return CreateIntentResponse(UUID.randomUUID())
+    public CreateIntentResponse createIntent(@RequestBody CreateIntentRequest request) {
+        return new CreateIntentResponse(UUID.randomUUID());
+    }
+
+    public record CreateIntentRequest(
+        BigDecimal availableCash,
+        BigDecimal monthlyContribution,
+        String riskProfile,
+        List<CreateIntentAssetRequest> assets
+    ) {
+    }
+
+    public record CreateIntentAssetRequest(UUID assetId, String thesis) {
+    }
+
+    public record CreateIntentResponse(UUID intentId) {
     }
 }
-
-data class CreateIntentRequest(
-    val availableCash: BigDecimal,
-    val monthlyContribution: BigDecimal?,
-    val riskProfile: String,
-    val assets: List<CreateIntentAssetRequest>,
-)
-
-data class CreateIntentAssetRequest(
-    val assetId: UUID,
-    val thesis: String?,
-)
-
-data class CreateIntentResponse(
-    val intentId: UUID,
-)
 ```
 
-```kotlin
-package com.hyejin.portfolio.api.adapter.`in`.web
+```java
+package com.hyejin.portfolio.api.adapter.in.web;
 
-import com.hyejin.portfolio.api.application.service.ProposalQueryService
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
+import com.hyejin.portfolio.api.application.service.ProposalQueryService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/evidence")
-class EvidenceController(
-    private val proposalQueryService: ProposalQueryService,
-) {
+public class EvidenceController {
+    private final ProposalQueryService proposalQueryService;
+
+    public EvidenceController(ProposalQueryService proposalQueryService) {
+        this.proposalQueryService = proposalQueryService;
+    }
+
     @GetMapping("/{evidenceId}")
-    fun getEvidence(@PathVariable evidenceId: UUID) = proposalQueryService.getEvidence(evidenceId)
-}
-```
-
-- [ ] **Step 5: Register `ProposalQueryService` bean**
-
-Add to `ProposalQueryService`:
-
-```kotlin
-import org.springframework.stereotype.Service
-
-@Service
-class ProposalQueryService {
-    fun getProposal(proposalId: UUID): ProposalDetailResponse {
-        return ProposalDetailResponse(
-            proposalId = proposalId,
-            status = "COMPLETED",
-            title = "Mock cycle momentum portfolio proposal",
-            recommendedHorizonMonths = 12,
-            allocations = emptyList(),
-            capitalGrowth = emptyList(),
-        )
-    }
-
-    fun getEvidence(evidenceId: UUID): EvidenceDetailResponse {
-        return EvidenceDetailResponse(
-            evidenceId = evidenceId,
-            claim = "Mock evidence-backed claim",
-            claimType = "INTERPRETATION",
-            confidence = "MEDIUM",
-            sources = listOf("mock-source"),
-            limitations = listOf("mock data only"),
-        )
+    public Object getEvidence(@PathVariable UUID evidenceId) {
+        return proposalQueryService.getEvidence(evidenceId);
     }
 }
 ```
 
-- [ ] **Step 6: Write query service test**
+- [ ] **Step 5: Write query service test**
 
-```kotlin
-package com.hyejin.portfolio.api.application.service
+```java
+package com.hyejin.portfolio.api.application.service;
 
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ProposalQueryServiceTest {
     @Test
-    fun `returns completed mock proposal detail`() {
-        val proposalId = UUID.randomUUID()
-        val response = ProposalQueryService().getProposal(proposalId)
+    void returnsCompletedMockProposalDetail() {
+        var proposalId = UUID.randomUUID();
+        var response = new ProposalQueryService().getProposal(proposalId);
 
-        assertEquals(proposalId, response.proposalId)
-        assertEquals("COMPLETED", response.status)
+        assertThat(response.proposalId()).isEqualTo(proposalId);
+        assertThat(response.status()).isEqualTo("COMPLETED");
     }
 
     @Test
-    fun `returns mock evidence detail`() {
-        val evidenceId = UUID.randomUUID()
-        val response = ProposalQueryService().getEvidence(evidenceId)
+    void returnsMockEvidenceDetail() {
+        var evidenceId = UUID.randomUUID();
+        var response = new ProposalQueryService().getEvidence(evidenceId);
 
-        assertEquals(evidenceId, response.evidenceId)
-        assertEquals("INTERPRETATION", response.claimType)
+        assertThat(response.evidenceId()).isEqualTo(evidenceId);
+        assertThat(response.claimType()).isEqualTo("INTERPRETATION");
     }
 }
 ```
 
-- [ ] **Step 7: Run API tests/build**
+- [ ] **Step 6: Run API tests/build**
 
 ```bash
 ./gradlew :portfolio-api:test
@@ -1261,7 +1386,7 @@ class ProposalQueryServiceTest {
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add portfolio-api
@@ -1273,80 +1398,87 @@ git commit -m "feat: add proposal query service and controllers"
 ### Task 7: Worker Mock Proposal Flow
 
 **Files:**
-- Create: `portfolio-worker/src/main/kotlin/com/hyejin/portfolio/worker/PortfolioWorkerApplication.kt`
-- Create: `portfolio-worker/src/main/kotlin/com/hyejin/portfolio/worker/application/MockProposalJobRunner.kt`
-- Test: `portfolio-worker/src/test/kotlin/com/hyejin/portfolio/worker/application/MockProposalJobRunnerTest.kt`
+- Create: `portfolio-worker/src/main/java/com/hyejin/portfolio/worker/PortfolioWorkerApplication.java`
+- Create: `portfolio-worker/src/main/java/com/hyejin/portfolio/worker/application/MockProposalJobRunner.java`
+- Create: `portfolio-worker/src/main/java/com/hyejin/portfolio/worker/application/MockProposalJobResult.java`
+- Test: `portfolio-worker/src/test/java/com/hyejin/portfolio/worker/application/MockProposalJobRunnerTest.java`
 
 - [ ] **Step 1: Create worker app**
 
-```kotlin
-package com.hyejin.portfolio.worker
+```java
+package com.hyejin.portfolio.worker;
 
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.runApplication
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-class PortfolioWorkerApplication
-
-fun main(args: Array<String>) {
-    runApplication<PortfolioWorkerApplication>(*args)
+public class PortfolioWorkerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(PortfolioWorkerApplication.class, args);
+    }
 }
 ```
 
 - [ ] **Step 2: Create mock process manager**
 
-```kotlin
-package com.hyejin.portfolio.worker.application
+```java
+package com.hyejin.portfolio.worker.application;
 
-import java.util.UUID
+import java.util.List;
+import java.util.UUID;
 
-class MockProposalJobRunner {
-    fun run(intentId: UUID): MockProposalJobResult {
-        return MockProposalJobResult(
-            intentId = intentId,
-            steps = listOf(
+public class MockProposalJobRunner {
+    public MockProposalJobResult run(UUID intentId) {
+        return new MockProposalJobResult(
+            intentId,
+            List.of(
                 "VALIDATE_INTENT",
                 "RESOLVE_ASSETS",
                 "GENERATE_ALLOCATION",
                 "SIMULATE_CAPITAL_GROWTH",
                 "CREATE_EVIDENCE_LINKS",
-                "COMPLETE_PROPOSAL",
-            ),
-        )
+                "COMPLETE_PROPOSAL"
+            )
+        );
     }
 }
+```
 
-data class MockProposalJobResult(
-    val intentId: UUID,
-    val steps: List<String>,
-)
+```java
+package com.hyejin.portfolio.worker.application;
+
+import java.util.List;
+import java.util.UUID;
+
+public record MockProposalJobResult(UUID intentId, List<String> steps) {
+}
 ```
 
 - [ ] **Step 3: Write worker flow test**
 
-```kotlin
-package com.hyejin.portfolio.worker.application
+```java
+package com.hyejin.portfolio.worker.application;
 
-import java.util.UUID
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class MockProposalJobRunnerTest {
     @Test
-    fun `worker coordinates workflow steps without domain decisions`() {
-        val result = MockProposalJobRunner().run(UUID.randomUUID())
+    void workerCoordinatesWorkflowStepsWithoutDomainDecisions() {
+        var result = new MockProposalJobRunner().run(UUID.randomUUID());
 
-        assertEquals(
-            listOf(
-                "VALIDATE_INTENT",
-                "RESOLVE_ASSETS",
-                "GENERATE_ALLOCATION",
-                "SIMULATE_CAPITAL_GROWTH",
-                "CREATE_EVIDENCE_LINKS",
-                "COMPLETE_PROPOSAL",
-            ),
-            result.steps,
-        )
+        assertThat(result.steps()).isEqualTo(List.of(
+            "VALIDATE_INTENT",
+            "RESOLVE_ASSETS",
+            "GENERATE_ALLOCATION",
+            "SIMULATE_CAPITAL_GROWTH",
+            "CREATE_EVIDENCE_LINKS",
+            "COMPLETE_PROPOSAL"
+        ));
     }
 }
 ```
@@ -1371,47 +1503,49 @@ git commit -m "feat: add mock proposal worker flow"
 ### Task 8: Architecture Tests
 
 **Files:**
-- Modify: `portfolio-api/build.gradle.kts`
-- Create: `portfolio-api/src/test/kotlin/com/hyejin/portfolio/api/ArchitectureTest.kt`
+- Modify: `portfolio-api/build.gradle`
+- Create: `portfolio-api/src/test/java/com/hyejin/portfolio/api/ArchitectureTest.java`
 
 - [ ] **Step 1: Add ArchUnit dependency**
 
-Add to `portfolio-api/build.gradle.kts`:
+Add to `portfolio-api/build.gradle`:
 
-```kotlin
-testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
+```groovy
+testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0'
 ```
 
 - [ ] **Step 2: Create architecture tests**
 
-```kotlin
-package com.hyejin.portfolio.api
+```java
+package com.hyejin.portfolio.api;
 
-import com.tngtech.archunit.core.importer.ClassFileImporter
-import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
-import kotlin.test.Test
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import org.junit.jupiter.api.Test;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 class ArchitectureTest {
-    private val classes = ClassFileImporter().importPackages("com.hyejin.portfolio")
+    private final com.tngtech.archunit.core.domain.JavaClasses classes =
+        new ClassFileImporter().importPackages("com.hyejin.portfolio");
 
     @Test
-    fun `domain packages do not depend on spring`() {
+    void domainPackagesDoNotDependOnSpring() {
         noClasses()
             .that().resideInAPackage("..domain..")
             .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
-            .check(classes)
+            .check(classes);
     }
 
     @Test
-    fun `api controllers do not depend on adapter out packages`() {
+    void apiControllersDoNotDependOnAdapterOutPackages() {
         noClasses()
             .that().resideInAPackage("..api.adapter.in.web..")
             .should().dependOnClassesThat().resideInAPackage("..adapter.out..")
-            .check(classes)
+            .check(classes);
     }
 
     @Test
-    fun `business modules do not depend on each other directly`() {
+    void allocationModuleDoesNotDependOnOtherBusinessModules() {
         noClasses()
             .that().resideInAPackage("..allocation..")
             .should().dependOnClassesThat().resideInAnyPackage(
@@ -1419,9 +1553,9 @@ class ArchitectureTest {
                 "..evidence..",
                 "..simulation..",
                 "..recommendation..",
-                "..proposal..",
+                "..proposal.."
             )
-            .check(classes)
+            .check(classes);
     }
 }
 ```
@@ -1437,7 +1571,7 @@ Expected: PASS.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add portfolio-api/build.gradle.kts portfolio-api/src/test/kotlin/com/hyejin/portfolio/api/ArchitectureTest.kt
+git add portfolio-api/build.gradle portfolio-api/src/test/java/com/hyejin/portfolio/api/ArchitectureTest.java
 git commit -m "test: enforce architecture boundaries"
 ```
 

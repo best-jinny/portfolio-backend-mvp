@@ -266,7 +266,7 @@ Composition rule:
 
 MVP 추천 스택:
 
-- Kotlin.
+- Java 21.
 - Spring Boot WebFlux.
 - Spring Data JPA.
 - PostgreSQL.

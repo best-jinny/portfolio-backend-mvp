@@ -266,7 +266,7 @@ If the proposal read path later becomes expensive or highly specialized, replace
 
 Recommended MVP stack:
 
-- Kotlin.
+- Java 21.
 - Spring Boot WebFlux.
 - Spring Data JPA.
 - PostgreSQL.
