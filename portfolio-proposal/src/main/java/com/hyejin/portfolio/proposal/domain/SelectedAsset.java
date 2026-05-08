@@ -12,7 +12,8 @@ public record SelectedAsset(
     String market,
     Currency currency,
     String userThesis,
-    int displayOrder
+    int displayOrder,
+    ProposalAssetSnapshot snapshot
 ) {
     public SelectedAsset {
         Objects.requireNonNull(assetId, "assetId must not be null");
@@ -21,5 +22,6 @@ public record SelectedAsset(
         Objects.requireNonNull(assetType, "assetType must not be null");
         Objects.requireNonNull(market, "market must not be null");
         Objects.requireNonNull(currency, "currency must not be null");
+        Objects.requireNonNull(snapshot, "snapshot must not be null");
     }
 }

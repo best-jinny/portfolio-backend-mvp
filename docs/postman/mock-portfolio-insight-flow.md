@@ -21,7 +21,30 @@ Stable asset IDs allow repeatable Postman examples.
 
 ---
 
-## 2. Create Proposal (S&P500 ETF + Bitcoin)
+## 2. Create Intent (S&P500 ETF + Bitcoin)
+
+```http
+POST /api/portfolio-intents
+Content-Type: application/json
+```
+
+```json
+{
+  "availableCash": 10000000,
+  "monthlyContribution": 1000000,
+  "riskProfile": "GROWTH",
+  "assets": [
+    {"assetId": "00000000-0000-0000-0000-000000000104", "thesis": "US core"},
+    {"assetId": "00000000-0000-0000-0000-000000000107", "thesis": "Crypto upside"}
+  ]
+}
+```
+
+Save the returned `intentId`.
+
+---
+
+## 3. Create Proposal
 
 ```http
 POST /api/portfolio-proposals
@@ -30,11 +53,7 @@ Content-Type: application/json
 
 ```json
 {
-  "intentId": "00000000-0000-0000-0000-000000000999",
-  "assetIds": [
-    "00000000-0000-0000-0000-000000000104",
-    "00000000-0000-0000-0000-000000000107"
-  ]
+  "intentId": "{intentId}"
 }
 ```
 
@@ -42,17 +61,17 @@ Expected: `status` is `COMPLETED`, `signals[0].type` is `FALSE_DIVERSIFICATION`.
 
 ---
 
-## 3. Get Proposal Detail
+## 4. Get Proposal Detail
 
 ```http
 GET /api/portfolio-proposals/{proposalId}
 ```
 
-Use the `proposalId` from the create response.
+Use the `proposalId` from the create response. The detail response includes composed allocations and capital growth points.
 
 ---
 
-## 4. Get Evidence Detail
+## 5. Get Evidence Detail
 
 The `FALSE_DIVERSIFICATION` action includes an `evidenceIds` field.
 Copy one ID and call:
@@ -65,19 +84,21 @@ Returns the claim, basis, limitation, review trigger, and source snapshots.
 
 ---
 
-## 5. Create Proposal (Samsung + SOXL — overlapping semiconductor)
+## 6. Create Intent And Proposal (Samsung + SOXL — overlapping semiconductor)
 
 ```json
 {
-  "intentId": "00000000-0000-0000-0000-000000000999",
-  "assetIds": [
-    "00000000-0000-0000-0000-000000000101",
-    "00000000-0000-0000-0000-000000000106"
+  "availableCash": 10000000,
+  "monthlyContribution": 1000000,
+  "riskProfile": "GROWTH",
+  "assets": [
+    {"assetId": "00000000-0000-0000-0000-000000000101", "thesis": "Korea semiconductor"},
+    {"assetId": "00000000-0000-0000-0000-000000000106", "thesis": "Tactical semiconductor"}
   ]
 }
 ```
 
-Expected: `signals` includes `OVERLAPPING_EXPOSURE` and `TACTICAL_PRODUCT_MISUSE`.
+Use the returned `intentId` to create a proposal. Expected: `signals` includes `OVERLAPPING_EXPOSURE` and `TACTICAL_PRODUCT_MISUSE`.
 
 ---
 

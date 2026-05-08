@@ -3,6 +3,7 @@ package com.hyejin.portfolio.proposal.application.service;
 import com.hyejin.portfolio.common.Money;
 import com.hyejin.portfolio.proposal.adapter.out.InMemoryPortfolioIntentRepository;
 import com.hyejin.portfolio.proposal.application.port.in.CreatePortfolioIntentUseCase;
+import com.hyejin.portfolio.proposal.domain.ProposalAssetSnapshot;
 import com.hyejin.portfolio.proposal.domain.ProposalMode;
 import com.hyejin.portfolio.proposal.domain.RiskProfile;
 import com.hyejin.portfolio.proposal.domain.SelectedAsset;
@@ -28,7 +29,17 @@ class CreatePortfolioIntentServiceTest {
             "KRX",
             Currency.getInstance("KRW"),
             "broad US equity core",
-            1
+            1,
+            new ProposalAssetSnapshot(
+                UUID.fromString("00000000-0000-0000-0000-000000000104"),
+                "TIGER-SP500",
+                "TIGER US S&P500 ETF",
+                List.of("BROAD_US_MARKET", "RISK_APPETITE"),
+                BigDecimal.ONE,
+                6,
+                "US large-cap earnings and dollar exposure",
+                List.of("US mega-cap breadth narrows")
+            )
         );
 
         var intent = service.create(new CreatePortfolioIntentUseCase.Command(

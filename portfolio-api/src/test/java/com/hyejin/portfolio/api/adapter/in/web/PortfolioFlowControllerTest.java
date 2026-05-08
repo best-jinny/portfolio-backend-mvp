@@ -1,6 +1,8 @@
 package com.hyejin.portfolio.api.adapter.in.web;
 
 import com.hyejin.portfolio.api.PortfolioApiApplication;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -16,8 +18,11 @@ class PortfolioFlowControllerTest {
     @Autowired
     private WebTestClient webTestClient;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
-    void postmanFlowWorksWithMockData() {
+    void postmanFlowWorksWithMockData() throws Exception {
         webTestClient.get()
             .uri("/api/assets/search?query=bitcoin")
             .exchange()
@@ -25,23 +30,53 @@ class PortfolioFlowControllerTest {
             .expectBody()
             .jsonPath("$[0].symbol").isEqualTo("KRW-BTC");
 
-        webTestClient.post()
-            .uri("/api/portfolio-proposals")
+        var intentResult = webTestClient.post()
+            .uri("/api/portfolio-intents")
             .header("Content-Type", "application/json")
             .bodyValue("""
                 {
-                  "intentId": "00000000-0000-0000-0000-000000000999",
-                  "assetIds": [
-                    "00000000-0000-0000-0000-000000000104",
-                    "00000000-0000-0000-0000-000000000107"
+                  "availableCash": 10000000,
+                  "monthlyContribution": 1000000,
+                  "riskProfile": "GROWTH",
+                  "assets": [
+                    {"assetId": "00000000-0000-0000-0000-000000000104", "thesis": "US core"},
+                    {"assetId": "00000000-0000-0000-0000-000000000107", "thesis": "Crypto upside"}
                   ]
                 }
                 """)
             .exchange()
             .expectStatus().isOk()
             .expectBody()
+            .jsonPath("$.intentId").exists()
+            .returnResult();
+        var intentId = objectMapper.readTree(intentResult.getResponseBody()).get("intentId").asText();
+
+        var proposalResult = webTestClient.post()
+            .uri("/api/portfolio-proposals")
+            .header("Content-Type", "application/json")
+            .bodyValue("""
+                {
+                  "intentId": "%s"
+                }
+                """.formatted(intentId))
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
             .jsonPath("$.status").isEqualTo("COMPLETED")
-            .jsonPath("$.signals[0].type").isEqualTo("FALSE_DIVERSIFICATION");
+            .jsonPath("$.signals[0].type").isEqualTo("FALSE_DIVERSIFICATION")
+            .returnResult();
+        JsonNode proposal = objectMapper.readTree(proposalResult.getResponseBody());
+        var proposalId = proposal.get("proposalId").asText();
+
+        webTestClient.get()
+            .uri("/api/portfolio-proposals/" + proposalId)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.proposalId").isEqualTo(proposalId)
+            .jsonPath("$.summary").value(org.hamcrest.Matchers.containsString("risk-taking environment"))
+            .jsonPath("$.allocations[0].role").exists()
+            .jsonPath("$.capitalGrowth[0].month").isEqualTo(0);
 
         var evidenceId = UUID.nameUUIDFromBytes(
             "FALSE_DIVERSIFICATION:TIGER-SP500,KRW-BTC".getBytes(StandardCharsets.UTF_8)

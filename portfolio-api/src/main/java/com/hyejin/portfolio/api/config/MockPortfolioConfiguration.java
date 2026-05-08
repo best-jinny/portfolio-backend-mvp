@@ -36,11 +36,11 @@ public class MockPortfolioConfiguration {
 
     @Bean
     CreatePortfolioProposalService createPortfolioProposalService(
-        MockAssetCatalogService catalog,
+        InMemoryPortfolioIntentRepository intentRepository,
         InMemoryPortfolioProposalRepository repository
     ) {
         return new CreatePortfolioProposalService(
-            catalog,
+            intentRepository,
             repository,
             new AnalyzePortfolioExposuresService(),
             new DetectInsightSignalsService(),
